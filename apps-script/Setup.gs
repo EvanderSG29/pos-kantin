@@ -130,3 +130,19 @@ function setSeedAdminPin(pin) {
     return setUserPinByEmail(seedUser.email, pin);
   });
 }
+
+function setupApplicationSpreadsheetAndSeedPin() {
+  var setupResult = setupApplicationSpreadsheet();
+  var seededUsers = setSeedAdminPin("290729");
+
+  return {
+    spreadsheetId: setupResult.spreadsheetId,
+    spreadsheetUrl: setupResult.spreadsheetUrl,
+    seedAdminEmails: setupResult.seedAdminEmails,
+    seededUsers: seededUsers,
+  };
+}
+
+function seedDefaultAdminPin() {
+  return setSeedAdminPin("290729");
+}

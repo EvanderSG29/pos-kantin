@@ -27,16 +27,22 @@ Source backend ada di folder `apps-script/`.
 Setelah source berhasil dipush:
 
 1. Buka editor Apps Script milik Ivan
-2. Jalankan fungsi `setupApplicationSpreadsheet()`
+2. Jalankan fungsi tanpa parameter:
+   - `setupApplicationSpreadsheetAndSeedPin()`
 3. Catat `spreadsheetUrl` yang dikembalikan
-4. Jalankan:
-   - `setSeedAdminPin("290729")`
+4. Jika nanti ingin mengulang seed PIN admin default, jalankan:
+   - `seedDefaultAdminPin()`
 5. Share Apps Script project dan spreadsheet ke Evander sebagai `Editor` jika Evander perlu akses browser
 
 Jika ingin set manual satu per satu, boleh juga:
 
 - `setUserPinByEmail("ivanmarigib@gmail.com", "290729")`
 - `setUserPinByEmail("smidgidionevander@gmail.com", "290729")`
+
+Catatan:
+
+- Di editor Apps Script, tombol `Run` paling aman untuk fungsi yang **tanpa parameter**.
+- Karena itu repo ini sekarang menyediakan wrapper `setupApplicationSpreadsheetAndSeedPin()` dan `seedDefaultAdminPin()`.
 
 ## Health check
 
