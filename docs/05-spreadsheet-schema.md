@@ -2,6 +2,13 @@
 
 Spreadsheet lama di Drive dipakai sebagai referensi baca saja. Aplikasi v1 menulis ke spreadsheet baru yang lebih rapi.
 
+## Model database yang dipakai
+
+- Spreadsheet dibuat otomatis oleh `setupApplicationSpreadsheet()`
+- Spreadsheet owner: `ivanmarigib@gmail.com`
+- Spreadsheet tidak dibuat sebagai file bound-script
+- Apps Script yang standalone akan menjadi pemilik alur backend dan pembuat spreadsheet baru
+
 ## Sheet `users`
 
 Header:
@@ -82,4 +89,3 @@ Header:
 - `revoked_at`
 - `created_at`
 - `updated_at`
-

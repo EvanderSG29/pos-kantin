@@ -1,5 +1,16 @@
 {
   "scriptId": "GANTI_DENGAN_SCRIPT_ID_APPS_SCRIPT",
-  "rootDir": "."
+  "rootDir": "",
+  "scriptExtensions": [
+    ".gs",
+    ".js"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "jsonExtensions": [
+    ".json"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
 }
-

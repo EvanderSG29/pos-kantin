@@ -26,6 +26,6 @@ Use this skill when the task is specific to the `pos-kantin` project.
 ## Project defaults
 
 - Admin utama adalah Evander.
+- GitHub owner adalah Evander, tetapi CLASP / Apps Script / Spreadsheet owner adalah Ivan.
 - Frontend default source may use mock mode until the real Apps Script Web App URL is configured.
 - API contract stays on `{ action, token?, payload? }` with `{ success, message, data }` responses.
-

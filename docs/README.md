@@ -12,6 +12,6 @@ Mulai dari urutan ini supaya setup tidak terasa berat:
 8. [08-migration-notes.md](./08-migration-notes.md)
 9. [09-checklist-pemula.md](./09-checklist-pemula.md)
 10. [10-codex-context.md](./10-codex-context.md)
+11. [11-multi-account-setup.md](./11-multi-account-setup.md)
 
 Dokumen sengaja dipecah pendek supaya tiap langkah bisa dikerjakan sedikit demi sedikit.
-

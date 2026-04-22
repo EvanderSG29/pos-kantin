@@ -13,11 +13,18 @@ Membangun aplikasi POS Kantin berbasis HTML, CSS, dan JavaScript vanilla yang mu
 - Gunakan schema sheet baru yang sudah dinormalisasi
 - `doGet` hanya untuk `health`
 - `doPost` untuk semua action aplikasi
+- GitHub account dan Google infra account memang dipisah
 
 ## Role
 
 - Admin utama: Evander
 - Petugas: data user dari sheet `users`
+
+## Model akun
+
+- GitHub owner: Evander
+- CLASP / Apps Script / Spreadsheet owner: Ivan
+- App admin login: Evander
 
 ## Referensi skill
 
@@ -29,4 +36,3 @@ Skill proyek ada di:
 Versi global Codex akan dicopy ke:
 
 - `C:\Users\smidg\.codex\skills\pos-kantin\`
-

@@ -14,10 +14,16 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 
 1. Masuk ke folder ini.
 2. Buat file `.clasp.json` lokal dari `.clasp.example.json`.
-3. Isi `scriptId` hasil `clasp create` atau `clasp clone`.
-4. Jalankan `clasp push`.
-5. Di editor Apps Script, jalankan `setupApplicationSpreadsheet()` sekali.
-6. Lalu jalankan `setUserPinByEmail("smidgidionevander@gmail.com", "PIN_BARU")`.
+3. Untuk repo ini, target script resmi adalah:
+   - `10R4EHwxFWyMfSVxmYDyIWF-sNaGbtFv9zxa7vviguI64qk8ZDjDYAKFB`
+4. Login CLASP dengan profil Ivan:
+   - `clasp login -u ivan`
+5. Jalankan:
+   - `clasp -u ivan push`
+6. Di editor Apps Script milik Ivan, jalankan `setupApplicationSpreadsheet()` sekali.
+7. Lalu jalankan `setUserPinByEmail("smidgidionevander@gmail.com", "PIN_BARU")`.
+8. Jika perlu, pakai wrapper:
+   - `.\clasp-ivan.ps1 push`
 
 ## Catatan penting
 
@@ -25,3 +31,4 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 - Spreadsheet ID live tidak disimpan di source. Gunakan `setSpreadsheetId()` atau `setupApplicationSpreadsheet()`.
 - `doGet` hanya untuk `health`.
 - Semua action aplikasi masuk lewat `doPost`.
+- GitHub tetap memakai akun Evander, tetapi Apps Script dan spreadsheet resmi dikelola oleh akun Ivan.

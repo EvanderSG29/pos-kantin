@@ -9,12 +9,14 @@
 
 ## Apps Script
 
-- [ ] Login `clasp`
+- [ ] Login `clasp` untuk profil Ivan: `clasp login -u ivan`
 - [ ] Masuk ke folder `apps-script`
-- [ ] Jalankan `clasp create --type standalone --title "POS Kantin API"`
-- [ ] Jalankan `clasp push`
+- [ ] Pastikan `.clasp.json` menunjuk script `10R4EH...`
+- [ ] Jangan `clasp pull` dari script target kosong
+- [ ] Jalankan `clasp -u ivan push`
 - [ ] Jalankan `setupApplicationSpreadsheet()`
 - [ ] Jalankan `setUserPinByEmail(...)`
+- [ ] Share script dan spreadsheet ke Evander bila perlu
 
 ## Frontend
 
@@ -31,4 +33,3 @@
 - [ ] Petugas bisa input transaksi
 - [ ] Simpanan bisa ditampilkan
 - [ ] Laporan bisa memfilter transaksi
-
