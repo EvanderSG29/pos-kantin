@@ -1,30 +1,40 @@
 # 09. Checklist Pemula
 
+Pakai format berikut untuk checklist manual di Markdown:
+
+- `[ ]` berarti belum selesai
+- `[x]` berarti sudah selesai
+
+Contoh:
+
+- `[x]` Login admin berhasil
+- `[ ]` Test login petugas
+
 ## Repo dan Git
 
-- [v] Buat repo private `EvanderSG29/pos-kantin` di GitHub web
-- [v] Jalankan `git push -u origin main`
-- [v] Biasakan `git status`
-- [v] Biasakan commit kecil dan jelas
+- [x] Buat repo private `EvanderSG29/pos-kantin` di GitHub web
+- [x] Jalankan `git push -u origin main`
+- [x] Biasakan `git status`
+- [x] Biasakan commit kecil dan jelas
 
 ## Apps Script
 
-- [v] Login `clasp` untuk profil Ivan: `clasp login -u ivan`
-- [v] Masuk ke folder `apps-script`
-- [v] Pastikan `.clasp.json` menunjuk script `10R4EH...`
-- [v] Jangan `clasp pull` dari script target kosong
-- [v] Jalankan `clasp -u ivan push`
-- [v] Jalankan `setupApplicationSpreadsheetAndSeedPin()`
-- [v] Jika perlu reset PIN seed, jalankan `seedDefaultAdminPin()`
-- [v] Share script dan spreadsheet ke Evander bila perlu
+- [x] Login `clasp` untuk profil Ivan: `clasp login -u ivan`
+- [x] Masuk ke folder `apps-script`
+- [x] Pastikan `.clasp.json` menunjuk script `10R4EH...`
+- [x] Jangan `clasp pull` dari script target kosong
+- [x] Jalankan `clasp -u ivan push`
+- [x] Jalankan `setupApplicationSpreadsheetAndSeedPin()`
+- [x] Jika perlu reset PIN seed, jalankan `seedDefaultAdminPin()`
+- [x] Share script dan spreadsheet ke Evander bila perlu
 
 ## Frontend
 
-- [v] Isi `assets/js/config.js`
-- [v] Jika mau pakai API live, ubah `USE_MOCK_API` menjadi `false`
-- [v] Isi `API_BASE_URL` dengan URL Web App
-- [v] Test dulu secara lokal sebelum ke Netlify (sepertinya untuk pengembangan masih pakai "npx serve ." delum ke netlify)
-- [v] Test login admin
+- [x] Isi `assets/js/config.js`
+- [x] Jika mau pakai API live, ubah `USE_MOCK_API` menjadi `false`
+- [x] Isi `API_BASE_URL` dengan URL Web App
+- [x] Test dulu secara lokal sebelum ke Netlify
+- [x] Test login admin
 - [ ] Test login petugas
 
 ## Verifikasi dasar
