@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Transaksi | POS Kantin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/main.css">
+    <link rel="stylesheet" href="./assets/css/dashboard.css">
+    <link rel="stylesheet" href="./assets/css/table.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+  </head>
+  <body class="app-page">
+    <div class="shell">
+      <aside id="sidebar" class="shell__sidebar"></aside>
+      <div class="shell__body">
+        <header id="topbar" class="shell__topbar"></header>
+        <main class="page stack">
+          <section class="page-header">
+            <div>
+              <p class="eyebrow">Transaksi</p>
+              <h1>Input dan kelola transaksi</h1>
+            </div>
+          </section>
+
+          <section class="two-column">
+            <article class="panel">
+              <div class="panel__header">
+                <h2>Form transaksi</h2>
+              </div>
+              <form id="transaction-form" class="stack">
+                <input type="hidden" name="id">
+                <div class="form-field">
+                  <label for="transactionDate">Tanggal</label>
+                  <input id="transactionDate" name="transactionDate" type="date" required>
+                </div>
+                <div class="form-field">
+                  <label for="supplierId">Pemasok</label>
+                  <select id="supplierId" name="supplierId" required></select>
+                </div>
+                <div class="form-field">
+                  <label for="supplierName">Nama pemasok fallback</label>
+                  <input id="supplierName" name="supplierName" type="text" placeholder="Dipakai jika pemasok baru">
+                </div>
+                <div class="form-field">
+                  <label for="itemName">Makanan</label>
+                  <input id="itemName" name="itemName" type="text" required>
+                </div>
+                <div class="form-field">
+                  <label for="unitName">Satuan</label>
+                  <input id="unitName" name="unitName" type="text" placeholder="1 pcs / 1 cup / 1 porsi" required>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label for="quantity">Jumlah</label>
+                    <input id="quantity" name="quantity" type="number" min="0" step="1" required>
+                  </div>
+                  <div class="form-field">
+                    <label for="remainingQuantity">Sisa</label>
+                    <input id="remainingQuantity" name="remainingQuantity" type="number" min="0" step="1" required>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label for="unitPrice">Harga per item</label>
+                  <input id="unitPrice" name="unitPrice" type="number" min="0" step="500" required>
+                </div>
+                <div class="form-field">
+                  <label for="notes">Catatan</label>
+                  <textarea id="notes" name="notes" rows="4" placeholder="Catatan singkat"></textarea>
+                </div>
+                <div class="button-row">
+                  <button type="submit" class="button button--primary">Simpan transaksi</button>
+                  <button type="button" id="transaction-reset" class="button button--ghost">Reset</button>
+                </div>
+              </form>
+            </article>
+
+            <article class="panel stack">
+              <div class="panel__header">
+                <h2>Daftar transaksi</h2>
+              </div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label for="filter-date">Filter tanggal</label>
+                  <input id="filter-date" type="date">
+                </div>
+                <div class="form-field">
+                  <label for="filter-search">Cari item / pemasok</label>
+                  <input id="filter-search" type="text" placeholder="cirawang, uni, burger...">
+                </div>
+              </div>
+              <div id="transaction-table"></div>
+            </article>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="modal-root"></div>
+    <div id="toast-root"></div>
+    <script type="module" src="./assets/js/pages/transaksi.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Users | POS Kantin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/main.css">
+    <link rel="stylesheet" href="./assets/css/dashboard.css">
+    <link rel="stylesheet" href="./assets/css/table.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+  </head>
+  <body class="app-page">
+    <div class="shell">
+      <aside id="sidebar" class="shell__sidebar"></aside>
+      <div class="shell__body">
+        <header id="topbar" class="shell__topbar"></header>
+        <main class="page stack">
+          <section class="page-header">
+            <div>
+              <p class="eyebrow">Users</p>
+              <h1>Kelola petugas</h1>
+            </div>
+          </section>
+
+          <section class="two-column">
+            <article class="panel">
+              <div class="panel__header">
+                <h2>Form user</h2>
+              </div>
+              <form id="user-form" class="stack">
+                <input type="hidden" name="id">
+                <div class="form-field">
+                  <label for="fullName">Nama lengkap</label>
+                  <input id="fullName" name="fullName" type="text" required>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label for="nickname">Nama panggilan</label>
+                    <input id="nickname" name="nickname" type="text" required>
+                  </div>
+                  <div class="form-field">
+                    <label for="classGroup">Rombel</label>
+                    <input id="classGroup" name="classGroup" type="text" placeholder="XI PPLG">
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label for="email">Email</label>
+                  <input id="email" name="email" type="email" required>
+                </div>
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label for="role">Role</label>
+                    <select id="role" name="role">
+                      <option value="petugas">Petugas</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                      <option value="aktif">Aktif</option>
+                      <option value="nonaktif">Nonaktif</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label for="pin">PIN baru</label>
+                  <input id="pin" name="pin" type="password" inputmode="numeric" placeholder="Kosongkan jika tidak diubah">
+                </div>
+                <div class="form-field">
+                  <label for="notes">Catatan</label>
+                  <textarea id="notes" name="notes" rows="4"></textarea>
+                </div>
+                <div class="button-row">
+                  <button type="submit" class="button button--primary">Simpan user</button>
+                  <button type="button" id="user-reset" class="button button--ghost">Reset</button>
+                </div>
+              </form>
+            </article>
+
+            <article class="panel stack">
+              <div class="panel__header">
+                <h2>Daftar user</h2>
+              </div>
+              <div id="users-table"></div>
+            </article>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="modal-root"></div>
+    <div id="toast-root"></div>
+    <script type="module" src="./assets/js/pages/users.js"></script>
+  </body>
+</html>
+

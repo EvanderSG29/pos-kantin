@@ -1,0 +1,16 @@
+.DS_Store
+Thumbs.db
+node_modules/
+dist/
+build/
+coverage/
+.netlify/
+.clasp.json
+.clasprc.json
+.claspignore.local
+.env
+.env.*
+assets/js/config.local.js
+apps-script/.clasp.json
+apps-script/.clasprc.json
+

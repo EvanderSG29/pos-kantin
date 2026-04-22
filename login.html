@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login | POS Kantin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/main.css">
+    <link rel="stylesheet" href="./assets/css/auth.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+  </head>
+  <body class="auth-page">
+    <main class="auth-layout">
+      <section class="auth-layout__intro">
+        <p class="eyebrow">POS Kantin</p>
+        <h1>Masuk sebagai admin atau petugas.</h1>
+        <p>
+          Default source code memakai placeholder config dan mode mock untuk preview lokal.
+          Saat Web App Apps Script sudah siap, tinggal ubah pengaturan di `assets/js/config.js`.
+        </p>
+        <div class="auth-note">
+          <strong>Catatan dev:</strong>
+          <span>Mode mock aktif secara default. Email admin: <code>smidgidionevander@gmail.com</code>, PIN dev: <code>1234</code>.</span>
+        </div>
+      </section>
+
+      <section class="auth-card">
+        <form id="login-form" class="stack">
+          <div class="form-field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="nama@email.com" required>
+          </div>
+
+          <div class="form-field">
+            <label for="pin">PIN</label>
+            <input id="pin" name="pin" type="password" inputmode="numeric" placeholder="Masukkan PIN" required>
+          </div>
+
+          <button type="submit" class="button button--primary button--block">Masuk</button>
+        </form>
+
+        <div class="auth-footer">
+          <a href="./index.html">Kembali ke beranda</a>
+          <a href="./docs/09-checklist-pemula.md">Checklist setup</a>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast-root"></div>
+    <script type="module" src="./assets/js/pages/login.js"></script>
+  </body>
+</html>
+

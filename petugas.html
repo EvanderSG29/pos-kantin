@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard Petugas | POS Kantin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/main.css">
+    <link rel="stylesheet" href="./assets/css/dashboard.css">
+    <link rel="stylesheet" href="./assets/css/table.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+  </head>
+  <body class="app-page">
+    <div class="shell">
+      <aside id="sidebar" class="shell__sidebar"></aside>
+      <div class="shell__body">
+        <header id="topbar" class="shell__topbar"></header>
+        <main class="page stack page--dashboard">
+          <section class="page-header">
+            <div>
+              <p class="eyebrow">Petugas</p>
+              <h1>Ringkasan shift</h1>
+            </div>
+            <a class="button button--secondary" href="./transaksi.html">Input transaksi</a>
+          </section>
+
+          <section id="summary-cards" class="card-grid"></section>
+
+          <section class="panel stack">
+            <div class="panel__header">
+              <h2>Transaksi saya</h2>
+              <a class="button button--ghost" href="./simpanan.html">Lihat simpanan</a>
+            </div>
+            <div id="my-transactions"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="modal-root"></div>
+    <div id="toast-root"></div>
+    <script type="module" src="./assets/js/pages/petugas.js"></script>
+  </body>
+</html>
+

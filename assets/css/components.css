@@ -1,0 +1,107 @@
+.button {
+  appearance: none;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button--primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  box-shadow: 0 12px 24px rgba(157, 63, 27, 0.24);
+}
+
+.button--secondary {
+  background: linear-gradient(135deg, var(--secondary), #1d4843);
+  color: white;
+}
+
+.button--ghost {
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text);
+  border: 1px solid rgba(84, 54, 32, 0.14);
+}
+
+.button--danger {
+  background: rgba(182, 63, 47, 0.14);
+  color: var(--danger);
+}
+
+.button--block {
+  width: 100%;
+}
+
+.toast-root {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1000;
+  display: grid;
+  gap: 10px;
+}
+
+.toast {
+  min-width: 260px;
+  max-width: 360px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  color: white;
+  box-shadow: var(--shadow);
+}
+
+.toast--info {
+  background: #245d57;
+}
+
+.toast--success {
+  background: #2f7b55;
+}
+
+.toast--error {
+  background: #b63f2f;
+}
+
+.modal-root {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1100;
+  background: rgba(45, 34, 24, 0.42);
+}
+
+.modal-root[data-open="true"] {
+  display: flex;
+}
+
+.modal {
+  width: min(520px, 100%);
+  border: 1px solid rgba(84, 54, 32, 0.14);
+  border-radius: 28px;
+  background: rgba(255, 249, 240, 0.98);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.modal h2,
+.modal p {
+  margin-top: 0;
+}
+
+.text-soft {
+  color: var(--text-soft);
+}
