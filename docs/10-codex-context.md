@@ -17,7 +17,7 @@ Membangun aplikasi POS Kantin berbasis HTML, CSS, dan JavaScript vanilla yang mu
 
 ## Role
 
-- Admin utama: Evander
+- Admin seed awal: Ivan dan Evander
 - Petugas: data user dari sheet `users`
 
 ## Model akun

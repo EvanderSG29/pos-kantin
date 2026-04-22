@@ -11,14 +11,15 @@ Dokumen ini menjelaskan pembagian akun yang dipakai di proyek ini supaya Anda ti
   - `ivanmarigib@gmail.com`
 - Script Apps Script resmi:
   - `10R4EHwxFWyMfSVxmYDyIWF-sNaGbtFv9zxa7vviguI64qk8ZDjDYAKFB`
-- Admin aplikasi di data:
+- Admin seed awal di data:
+  - `ivanmarigib@gmail.com`
   - `smidgidionevander@gmail.com`
 
 ## Artinya dalam praktik
 
 - Semua `git add`, `git commit`, `git push` tetap untuk repo GitHub Evander.
 - Semua `clasp push`, deploy web app, dan pembuatan spreadsheet database harus memakai akun Ivan.
-- Admin aplikasi tetap Evander melalui data di sheet `users`.
+- Data awal akan membuat dua akun admin terpisah, satu untuk Ivan dan satu untuk Evander.
 
 ## Setup CLASP yang disarankan
 
@@ -54,6 +55,6 @@ Alasannya:
 
 1. Buka Apps Script sebagai Ivan
 2. Jalankan `setupApplicationSpreadsheet()`
-3. Jalankan `setUserPinByEmail("smidgidionevander@gmail.com", "PIN_BARU")`
+3. Jalankan `setSeedAdminPin("290729")`
 4. Deploy Web App sebagai Ivan
 5. Share script dan spreadsheet ke Evander jika Evander perlu akses editor

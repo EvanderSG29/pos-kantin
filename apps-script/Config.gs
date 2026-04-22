@@ -6,7 +6,26 @@ const CONFIG = {
   SESSION_TTL_HOURS: 8,
   DEFAULT_TIMEZONE: "Asia/Jakarta",
   DEFAULT_SPREADSHEET_TITLE: "POS Kantin - App Database",
-  DEFAULT_ADMIN_EMAIL: "smidgidionevander@gmail.com",
+  SEED_ADMIN_USERS: [
+    {
+      fullName: "Ivan Marigib",
+      nickname: "Ivan",
+      email: "ivanmarigib@gmail.com",
+      role: "admin",
+      status: "aktif",
+      classGroup: "",
+      notes: "Admin seed awal untuk owner Google infra.",
+    },
+    {
+      fullName: "Evander Smid Gidion",
+      nickname: "Evander",
+      email: "smidgidionevander@gmail.com",
+      role: "admin",
+      status: "aktif",
+      classGroup: "XI PPLG",
+      notes: "Admin seed awal untuk owner GitHub dan admin aplikasi.",
+    },
+  ],
   SHEETS: {
     users: {
       name: "users",
@@ -91,4 +110,3 @@ const CONFIG = {
     },
   },
 };
-

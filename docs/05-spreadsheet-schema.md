@@ -8,6 +8,9 @@ Spreadsheet lama di Drive dipakai sebagai referensi baca saja. Aplikasi v1 menul
 - Spreadsheet owner: `ivanmarigib@gmail.com`
 - Spreadsheet tidak dibuat sebagai file bound-script
 - Apps Script yang standalone akan menjadi pemilik alur backend dan pembuat spreadsheet baru
+- Seed user awal akan membuat dua akun admin terpisah:
+  - `ivanmarigib@gmail.com`
+  - `smidgidionevander@gmail.com`
 
 ## Sheet `users`
 

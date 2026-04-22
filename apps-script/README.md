@@ -21,7 +21,8 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 5. Jalankan:
    - `clasp -u ivan push`
 6. Di editor Apps Script milik Ivan, jalankan `setupApplicationSpreadsheet()` sekali.
-7. Lalu jalankan `setUserPinByEmail("smidgidionevander@gmail.com", "PIN_BARU")`.
+7. Lalu jalankan:
+   - `setSeedAdminPin("290729")`
 8. Jika perlu, pakai wrapper:
    - `.\clasp-ivan.ps1 push`
 
@@ -32,3 +33,4 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 - `doGet` hanya untuk `health`.
 - Semua action aplikasi masuk lewat `doPost`.
 - GitHub tetap memakai akun Evander, tetapi Apps Script dan spreadsheet resmi dikelola oleh akun Ivan.
+- Seed awal membuat dua admin terpisah, satu Ivan dan satu Evander. PIN tidak disimpan mentah di `pin_hash`.

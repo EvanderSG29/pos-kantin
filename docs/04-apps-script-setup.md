@@ -9,7 +9,7 @@ Source backend ada di folder `apps-script/`.
 - Owner GitHub: Evander
 - Owner Apps Script: Ivan
 - Owner Spreadsheet database: Ivan
-- Admin aplikasi di data: Evander
+- Admin seed awal di data: Ivan dan Evander
 
 ## Langkah awal
 
@@ -30,8 +30,13 @@ Setelah source berhasil dipush:
 2. Jalankan fungsi `setupApplicationSpreadsheet()`
 3. Catat `spreadsheetUrl` yang dikembalikan
 4. Jalankan:
-   - `setUserPinByEmail("smidgidionevander@gmail.com", "PIN_BARU")`
+   - `setSeedAdminPin("290729")`
 5. Share Apps Script project dan spreadsheet ke Evander sebagai `Editor` jika Evander perlu akses browser
+
+Jika ingin set manual satu per satu, boleh juga:
+
+- `setUserPinByEmail("ivanmarigib@gmail.com", "290729")`
+- `setUserPinByEmail("smidgidionevander@gmail.com", "290729")`
 
 ## Health check
 

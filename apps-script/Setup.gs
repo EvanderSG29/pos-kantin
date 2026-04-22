@@ -11,6 +11,36 @@ function ensureSheetSchema_(spreadsheet, schema) {
   return sheet;
 }
 
+function ensureSeedUsers_() {
+  var createdUsers = [];
+
+  CONFIG.SEED_ADMIN_USERS.forEach(function (seedUser) {
+    if (getUserByEmail_(seedUser.email)) {
+      return;
+    }
+
+    var now = nowIso_();
+    var record = {
+      id: generateId_("USR"),
+      full_name: seedUser.fullName,
+      nickname: seedUser.nickname,
+      email: seedUser.email,
+      role: seedUser.role || "admin",
+      status: seedUser.status || "aktif",
+      class_group: seedUser.classGroup || "",
+      pin_hash: "",
+      notes: seedUser.notes || "Admin seed awal.",
+      created_at: now,
+      updated_at: now,
+    };
+
+    saveSheetRecord_("users", record);
+    createdUsers.push(sanitizeUser_(record));
+  });
+
+  return createdUsers;
+}
+
 function setupApplicationSpreadsheet() {
   var scriptProperties = PropertiesService.getScriptProperties();
   var spreadsheetId = scriptProperties.getProperty(CONFIG.SPREADSHEET_ID_PROPERTY);
@@ -29,22 +59,7 @@ function setupApplicationSpreadsheet() {
     spreadsheet.deleteSheet(defaultSheet);
   }
 
-  if (!getUserByEmail_(CONFIG.DEFAULT_ADMIN_EMAIL)) {
-    var now = nowIso_();
-    saveSheetRecord_("users", {
-      id: generateId_("USR"),
-      full_name: "Evander Smid Gidion",
-      nickname: "Evander",
-      email: CONFIG.DEFAULT_ADMIN_EMAIL,
-      role: "admin",
-      status: "aktif",
-      class_group: "XI PPLG",
-      pin_hash: "",
-      notes: "Admin seed awal. Set PIN lewat setUserPinByEmail().",
-      created_at: now,
-      updated_at: now,
-    });
-  }
+  var createdUsers = ensureSeedUsers_();
 
   if (!getSheetRecords_("suppliers").length) {
     [
@@ -69,6 +84,10 @@ function setupApplicationSpreadsheet() {
   return {
     spreadsheetId: spreadsheet.getId(),
     spreadsheetUrl: spreadsheet.getUrl(),
+    seedAdminEmails: CONFIG.SEED_ADMIN_USERS.map(function (seedUser) {
+      return seedUser.email;
+    }),
+    createdUsers: createdUsers,
   };
 }
 
@@ -102,3 +121,12 @@ function setUserPinByEmail(email, pin) {
   return sanitizeUser_(user);
 }
 
+function setSeedAdminPin(pin) {
+  if (!pin) {
+    throw new Error("PIN wajib diisi.");
+  }
+
+  return CONFIG.SEED_ADMIN_USERS.map(function (seedUser) {
+    return setUserPinByEmail(seedUser.email, pin);
+  });
+}
