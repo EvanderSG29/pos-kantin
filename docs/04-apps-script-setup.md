@@ -78,3 +78,5 @@ Untuk testing development, Anda juga bisa memakai `Deploy > Test deployments` ya
 - URL web app final tetap diisi manual ke `assets/js/config.js`
 - Jangan commit URL final jika Anda ingin menjaga repo tetap netral
 - Script owner dan spreadsheet owner sengaja sama-sama Ivan agar izin backend dan database tidak bercampur akun
+- Frontend repo ini mengirim body POST sebagai `text/plain` agar browser tidak mengirim preflight `OPTIONS` ke Apps Script web app
+- Jika browser menampilkan `Failed to fetch` padahal URL `/exec?action=health` terbuka, biasanya penyebabnya adalah request lama masih memakai `Content-Type: application/json` atau bundle frontend belum ter-refresh

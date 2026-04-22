@@ -462,7 +462,8 @@ async function realRequest(action, payload = {}, token = "") {
     const response = await fetch(APP_CONFIG.API_BASE_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        // Apps Script web apps reject browser preflight OPTIONS, so keep this a simple request.
+        "Content-Type": "text/plain;charset=utf-8",
       },
       body: JSON.stringify({ action, token, payload }),
       signal: controller.signal,
@@ -522,4 +523,3 @@ export const api = {
     return request("listSuppliers", {}, token);
   },
 };
-
