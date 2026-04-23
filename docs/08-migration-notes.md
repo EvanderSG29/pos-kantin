@@ -24,6 +24,7 @@
 ## Mapping kasar
 
 - `Nama User` lama -> sheet `users`
+- daftar nama + saldo tahun ajaran baru -> sheet `buyers`
 - `Input Jualan` lama -> sheet `transactions`
 - `Sheet1` simpanan lama -> sheet `savings`
 - Nama pemasok lama -> sheet `suppliers`
@@ -34,5 +35,12 @@
 2. Isi PIN admin dengan `setUserPinByEmail(...)`
 3. Tambahkan user petugas aktif satu per satu
 4. Tambahkan pemasok utama
-5. Baru input transaksi baru dari aplikasi
+5. Import CSV pembeli untuk membuat master `buyers` dan seed `savings`
+6. Baru input transaksi dan keuangan harian dari aplikasi
 
+## Catatan import CSV
+
+- CSV diparsing di frontend admin lalu dikirim sebagai payload JSON ke Apps Script
+- Header wajib: `nama_pembeli`, `kelas/kategori`, `saldo_awal`
+- Import berjalan sebagai upsert berdasarkan kombinasi nama + kelas/kategori
+- Pembeli lama yang tidak ada di file terbaru diarsipkan menjadi `nonaktif`, bukan dihapus

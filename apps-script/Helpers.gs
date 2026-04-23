@@ -39,6 +39,27 @@ function toNumber_(value, fallback) {
   return isFinite(parsed) ? parsed : (fallback || 0);
 }
 
+function parseNumberStrict_(value, fieldLabel) {
+  if (value === "" || value === null || value === undefined) {
+    throw new Error(fieldLabel + " wajib diisi.");
+  }
+
+  var parsed = Number(value);
+  if (!isFinite(parsed)) {
+    throw new Error(fieldLabel + " harus berupa angka.");
+  }
+
+  return parsed;
+}
+
+function parseNonNegativeNumberStrict_(value, fieldLabel) {
+  var parsed = parseNumberStrict_(value, fieldLabel);
+  if (parsed < 0) {
+    throw new Error(fieldLabel + " tidak boleh negatif.");
+  }
+  return parsed;
+}
+
 function normalizeText_(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -153,3 +174,76 @@ function sortByDateDesc_(items, fieldName) {
   });
 }
 
+function sortByUpdatedAtDesc_(items, fieldName, fallbackField) {
+  return items.sort(function (left, right) {
+    var leftPrimary = new Date(left[fieldName]).getTime();
+    var rightPrimary = new Date(right[fieldName]).getTime();
+    if (rightPrimary !== leftPrimary) {
+      return rightPrimary - leftPrimary;
+    }
+
+    return new Date(right[fallbackField]).getTime() - new Date(left[fallbackField]).getTime();
+  });
+}
+
+function todayIsoDate_() {
+  return Utilities.formatDate(new Date(), CONFIG.DEFAULT_TIMEZONE, "yyyy-MM-dd");
+}
+
+function addDaysToIsoDate_(value, days) {
+  if (!value) return "";
+
+  var parts = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!parts) return "";
+
+  var date = new Date(Date.UTC(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])));
+  date.setUTCDate(date.getUTCDate() + Math.max(toNumber_(days), 0));
+  return date.toISOString().slice(0, 10);
+}
+
+function normalizeCommissionBaseType_(value) {
+  return String(value) === "profit" ? "profit" : "revenue";
+}
+
+function getDueStatusCode_(dueDate, referenceDate) {
+  var baseDate = referenceDate || todayIsoDate_();
+  if (!dueDate) return "unknown";
+  if (String(dueDate) < String(baseDate)) return "overdue";
+  if (String(dueDate) === String(baseDate)) return "today";
+  return "upcoming";
+}
+
+function calculateTransactionMetrics_(input) {
+  var quantity = Math.max(toNumber_(input.quantity), 0);
+  var remainingQuantity = Math.max(toNumber_(input.remainingQuantity), 0);
+  var unitPrice = Math.max(toNumber_(input.unitPrice), 0);
+  var costPrice = Math.max(toNumber_(input.costPrice), 0);
+  var commissionRate = Math.max(toNumber_(input.commissionRate, 10), 0);
+  var payoutTermDays = Math.max(toNumber_(input.payoutTermDays), 0);
+  var commissionBaseType = normalizeCommissionBaseType_(input.commissionBaseType);
+  var soldQuantity = Math.max(quantity - remainingQuantity, 0);
+  var grossSales = soldQuantity * unitPrice;
+  var profitAmount = Math.max((unitPrice - costPrice) * soldQuantity, 0);
+  var commissionBaseAmount = commissionBaseType === "profit" ? profitAmount : grossSales;
+  var commissionAmount = Math.round(commissionBaseAmount * (commissionRate / 100));
+  var payoutDueDate = input.transactionDate
+    ? addDaysToIsoDate_(input.transactionDate, payoutTermDays)
+    : "";
+
+  return {
+    quantity: quantity,
+    remainingQuantity: remainingQuantity,
+    soldQuantity: soldQuantity,
+    costPrice: costPrice,
+    unitPrice: unitPrice,
+    grossSales: grossSales,
+    totalValue: grossSales,
+    profitAmount: profitAmount,
+    commissionRate: commissionRate,
+    commissionBaseType: commissionBaseType,
+    commissionAmount: commissionAmount,
+    supplierNetAmount: grossSales - commissionAmount,
+    payoutTermDays: payoutTermDays,
+    payoutDueDate: payoutDueDate,
+  };
+}

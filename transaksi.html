@@ -2,105 +2,161 @@
 <html lang="id">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Transaksi | POS Kantin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/main.css">
-    <link rel="stylesheet" href="./assets/css/dashboard.css">
-    <link rel="stylesheet" href="./assets/css/table.css">
-    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+    <link href="./assets/vendor/sb-admin-2/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="./assets/vendor/sb-admin-2/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="./assets/css/sb-admin-custom.css" rel="stylesheet">
   </head>
-  <body class="app-page">
-    <div class="shell">
-      <aside id="sidebar" class="shell__sidebar"></aside>
-      <div class="shell__body">
-        <header id="topbar" class="shell__topbar"></header>
-        <main class="page stack">
-          <section class="page-header">
-            <div>
-              <p class="eyebrow">Transaksi</p>
-              <h1>Input dan kelola transaksi</h1>
-            </div>
-          </section>
+  <body class="pos-shell-page">
+    <div id="app-shell">
+      <aside id="app-sidebar"></aside>
 
-          <section class="two-column">
-            <article class="panel">
-              <div class="panel__header">
-                <h2>Form transaksi</h2>
-              </div>
-              <form id="transaction-form" class="stack">
-                <input type="hidden" name="id">
-                <div class="form-field">
-                  <label for="transactionDate">Tanggal</label>
-                  <input id="transactionDate" name="transactionDate" type="date" required>
-                </div>
-                <div class="form-field">
-                  <label for="supplierId">Pemasok</label>
-                  <select id="supplierId" name="supplierId" required></select>
-                </div>
-                <div class="form-field">
-                  <label for="supplierName">Nama pemasok fallback</label>
-                  <input id="supplierName" name="supplierName" type="text" placeholder="Dipakai jika pemasok baru">
-                </div>
-                <div class="form-field">
-                  <label for="itemName">Makanan</label>
-                  <input id="itemName" name="itemName" type="text" required>
-                </div>
-                <div class="form-field">
-                  <label for="unitName">Satuan</label>
-                  <input id="unitName" name="unitName" type="text" placeholder="1 pcs / 1 cup / 1 porsi" required>
-                </div>
-                <div class="form-grid">
-                  <div class="form-field">
-                    <label for="quantity">Jumlah</label>
-                    <input id="quantity" name="quantity" type="number" min="0" step="1" required>
-                  </div>
-                  <div class="form-field">
-                    <label for="remainingQuantity">Sisa</label>
-                    <input id="remainingQuantity" name="remainingQuantity" type="number" min="0" step="1" required>
-                  </div>
-                </div>
-                <div class="form-field">
-                  <label for="unitPrice">Harga per item</label>
-                  <input id="unitPrice" name="unitPrice" type="number" min="0" step="500" required>
-                </div>
-                <div class="form-field">
-                  <label for="notes">Catatan</label>
-                  <textarea id="notes" name="notes" rows="4" placeholder="Catatan singkat"></textarea>
-                </div>
-                <div class="button-row">
-                  <button type="submit" class="button button--primary">Simpan transaksi</button>
-                  <button type="button" id="transaction-reset" class="button button--ghost">Reset</button>
-                </div>
-              </form>
-            </article>
+      <div class="pos-shell-body">
+        <header id="app-topbar"></header>
 
-            <article class="panel stack">
-              <div class="panel__header">
-                <h2>Daftar transaksi</h2>
-              </div>
-              <div class="form-grid">
-                <div class="form-field">
-                  <label for="filter-date">Filter tanggal</label>
-                  <input id="filter-date" type="date">
-                </div>
-                <div class="form-field">
-                  <label for="filter-search">Cari item / pemasok</label>
-                  <input id="filter-search" type="text" placeholder="cirawang, uni, burger...">
-                </div>
-              </div>
-              <div id="transaction-table"></div>
-            </article>
-          </section>
+        <main id="app-main" class="pos-main" aria-live="polite" aria-busy="false">
+          <div id="app-page-slot"></div>
+          <div id="app-main-loading" class="pos-main-loading" hidden>
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <p id="app-main-loading-text" class="mb-0">Memuat konten...</p>
+          </div>
         </main>
       </div>
     </div>
 
+    <button id="scroll-to-top" class="scroll-to-top rounded" type="button" hidden aria-label="Kembali ke atas">
+      <i class="fas fa-angle-up"></i>
+    </button>
+
     <div id="modal-root"></div>
     <div id="toast-root"></div>
-    <script type="module" src="./assets/js/pages/transaksi.js"></script>
+
+    <template id="page-template" data-page-key="transactions" data-page-title="Transaksi">
+      <section class="pos-page-view">
+        <div class="container-fluid">
+          <div class="pos-page-header">
+            <div>
+              <p class="pos-section-title">Transaksi</p>
+              <h1 class="h3 mb-1 text-gray-800">Input dan kelola transaksi</h1>
+              <p class="small text-gray-600 mb-0">Catat transaksi titipan per item, simpan snapshot komisi pemasok, dan lihat preview hak kantin sebelum transaksi disimpan.</p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-xl-7 col-lg-7">
+              <section class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Form transaksi</h6>
+                </div>
+                <div class="card-body">
+                  <form id="transaction-form">
+                    <input type="hidden" name="id">
+
+                    <div class="form-row pos-finance-form-grid">
+                      <div class="form-group col-lg-4">
+                        <label for="transactionDate">Tanggal</label>
+                        <input id="transactionDate" name="transactionDate" type="date" class="form-control" required>
+                      </div>
+                      <div class="form-group col-lg-8">
+                        <label for="supplierId">Pemasok</label>
+                        <select id="supplierId" name="supplierId" class="custom-select" required></select>
+                      </div>
+                    </div>
+
+                    <div id="supplier-rules" class="pos-finance-note mb-4"></div>
+
+                    <div class="form-row pos-finance-form-grid">
+                      <div class="form-group col-lg-8">
+                        <label for="itemName">Nama barang</label>
+                        <input id="itemName" name="itemName" type="text" class="form-control" required>
+                      </div>
+                      <div class="form-group col-lg-4">
+                        <label for="unitName">Satuan</label>
+                        <input id="unitName" name="unitName" type="text" class="form-control" placeholder="1 pcs / 1 cup / 1 porsi" required>
+                      </div>
+                    </div>
+
+                    <div class="form-row pos-finance-form-grid">
+                      <div class="form-group col-md-3 col-sm-6">
+                        <label for="quantity">Jumlah titip</label>
+                        <input id="quantity" name="quantity" type="number" min="0" step="1" class="form-control" required>
+                      </div>
+                      <div class="form-group col-md-3 col-sm-6">
+                        <label for="remainingQuantity">Sisa</label>
+                        <input id="remainingQuantity" name="remainingQuantity" type="number" min="0" step="1" class="form-control" required>
+                      </div>
+                      <div class="form-group col-md-3 col-sm-6">
+                        <label for="costPrice">Harga modal</label>
+                        <input id="costPrice" name="costPrice" type="number" min="0" step="500" class="form-control" required>
+                      </div>
+                      <div class="form-group col-md-3 col-sm-6">
+                        <label for="unitPrice">Harga jual</label>
+                        <input id="unitPrice" name="unitPrice" type="number" min="0" step="500" class="form-control" required>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="notes">Catatan</label>
+                      <textarea id="notes" name="notes" rows="4" class="form-control" placeholder="Catatan singkat"></textarea>
+                    </div>
+
+                    <div class="pos-form-actions">
+                      <button type="submit" class="btn btn-primary shadow-sm">Simpan transaksi</button>
+                      <button type="button" id="transaction-reset" class="btn btn-outline-secondary">Reset</button>
+                    </div>
+                  </form>
+                </div>
+              </section>
+            </div>
+
+            <div class="col-xl-5 col-lg-5">
+              <section class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Preview perhitungan</h6>
+                </div>
+                <div class="card-body">
+                  <div id="transaction-preview"></div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <section class="card shadow mb-4">
+                <div class="card-header py-3 pos-card-toolbar">
+                  <h6 class="m-0 font-weight-bold text-primary">Daftar transaksi</h6>
+                  <div class="form-inline pos-transaction-filters">
+                    <div class="form-group">
+                      <label class="sr-only" for="filter-date">Filter tanggal</label>
+                      <input id="filter-date" type="date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                      <label class="sr-only" for="filter-search">Cari item / pemasok</label>
+                      <input id="filter-search" type="text" class="form-control" placeholder="Cari item, pemasok, petugas...">
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body" id="transaction-table"></div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <footer class="sticky-footer bg-white">
+          <div class="container my-auto">
+            <div class="copyright text-center my-auto pos-footer-note">
+              <span>Setiap transaksi menyimpan snapshot komisi dan jatuh tempo payout agar laporan serta pembayaran tetap konsisten.</span>
+            </div>
+          </div>
+        </footer>
+      </section>
+    </template>
+
+    <script type="module" src="./assets/js/app.js"></script>
   </body>
 </html>
-

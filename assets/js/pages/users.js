@@ -1,89 +1,114 @@
-import { mountAppShell } from "../app.js";
 import { api } from "../api.js";
 import { clearForm, fillForm, serializeForm } from "../components/form.js";
 import { renderDataTable } from "../components/table.js";
 import { showToast } from "../components/toast.js";
-import { requireAuth } from "../guards.js";
 import { escapeHtml } from "../utils.js";
 
-let session;
-let users = [];
+export async function initPage({ session, setPageBusy, signal }) {
+  const form = document.querySelector("#user-form");
+  const tableRoot = document.querySelector("#users-table");
+  const resetButton = document.querySelector("#user-reset");
 
-function renderUsers() {
-  document.querySelector("#users-table").innerHTML = renderDataTable({
-    columns: [
-      { key: "fullName", label: "Nama", render: (row) => escapeHtml(row.fullName) },
-      { key: "nickname", label: "Panggilan", render: (row) => escapeHtml(row.nickname) },
-      { key: "classGroup", label: "Rombel", render: (row) => escapeHtml(row.classGroup || "-") },
-      { key: "email", label: "Email", render: (row) => escapeHtml(row.email) },
-      { key: "role", label: "Role", render: (row) => `<span class="pill pill--muted">${escapeHtml(row.role)}</span>` },
-      { key: "status", label: "Status", render: (row) => `<span class="pill ${row.status === "aktif" ? "pill--success" : "pill--warning"}">${escapeHtml(row.status)}</span>` },
-      {
-        key: "actions",
-        label: "Aksi",
-        render: (row) => `<button type="button" class="button button--ghost" data-edit-id="${row.id}">Edit</button>`,
-      },
-    ],
-    rows: users,
-    emptyMessage: "Belum ada user.",
-  });
-}
+  let users = [];
 
-async function refreshUsers() {
-  const response = await api.listUsers(session.token);
-  users = response.data;
-  renderUsers();
-}
+  function renderUsers() {
+    tableRoot.innerHTML = renderDataTable({
+      columns: [
+        { key: "fullName", label: "Nama", render: (row) => escapeHtml(row.fullName) },
+        { key: "nickname", label: "Panggilan", render: (row) => escapeHtml(row.nickname) },
+        { key: "classGroup", label: "Rombel", render: (row) => escapeHtml(row.classGroup || "-") },
+        { key: "email", label: "Email", render: (row) => escapeHtml(row.email) },
+        { key: "role", label: "Role", render: (row) => `<span class="badge badge-light text-uppercase">${escapeHtml(row.role)}</span>` },
+        {
+          key: "status",
+          label: "Status",
+          render: (row) => `<span class="badge badge-${row.status === "aktif" ? "success" : "warning"} text-uppercase">${escapeHtml(row.status)}</span>`,
+        },
+        {
+          key: "actions",
+          label: "Aksi",
+          render: (row) => `<button type="button" class="btn btn-outline-primary btn-sm" data-edit-id="${row.id}">Edit</button>`,
+        },
+      ],
+      rows: users,
+      emptyMessage: "Belum ada user.",
+    });
+  }
 
-async function init() {
-  session = await requireAuth({ roles: ["admin"] });
-  if (!session) return;
+  async function refreshUsers(message = "Memuat data user...") {
+    const finishBusy = setPageBusy(true, message);
 
-  mountAppShell({ title: "Users", pageKey: "users", session });
+    try {
+      const response = await api.listUsers(session.token);
+      if (signal.aborted) return;
+
+      users = response.data;
+      renderUsers();
+    } finally {
+      finishBusy();
+    }
+  }
 
   try {
     await refreshUsers();
   } catch (error) {
-    showToast(error.message || "Gagal memuat users.", "error");
+    if (!signal.aborted) {
+      showToast(error.message || "Gagal memuat users.", "error");
+    }
   }
 
-  const form = document.querySelector("#user-form");
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const values = serializeForm(form);
+  form.addEventListener(
+    "submit",
+    async (event) => {
+      event.preventDefault();
 
-    try {
-      await api.saveUser(values, session.token);
-      await refreshUsers();
-      clearForm(form);
-      showToast("User berhasil disimpan.", "success");
-    } catch (error) {
-      showToast(error.message || "Gagal menyimpan user.", "error");
-    }
-  });
+      const finishBusy = setPageBusy(true, "Menyimpan user...");
 
-  document.querySelector("#user-reset").addEventListener("click", () => clearForm(form));
+      try {
+        await api.saveUser(serializeForm(form), session.token);
+        if (signal.aborted) return;
 
-  document.querySelector("#users-table").addEventListener("click", (event) => {
-    const editId = event.target.dataset.editId;
-    if (!editId) return;
+        await refreshUsers("Memuat ulang data user...");
+        if (signal.aborted) return;
 
-    const user = users.find((item) => item.id === editId);
-    if (!user) return;
+        clearForm(form);
+        showToast("User berhasil disimpan.", "success");
+      } catch (error) {
+        if (!signal.aborted) {
+          showToast(error.message || "Gagal menyimpan user.", "error");
+        }
+      } finally {
+        finishBusy();
+      }
+    },
+    { signal },
+  );
 
-    fillForm(form, {
-      id: user.id,
-      fullName: user.fullName,
-      nickname: user.nickname,
-      classGroup: user.classGroup,
-      email: user.email,
-      role: user.role,
-      status: user.status,
-      notes: user.notes,
-      pin: "",
-    });
-  });
+  resetButton.addEventListener("click", () => clearForm(form), { signal });
+
+  tableRoot.addEventListener(
+    "click",
+    (event) => {
+      const editId = event.target.dataset.editId;
+      if (!editId) return;
+
+      const user = users.find((item) => item.id === editId);
+      if (!user) return;
+
+      fillForm(form, {
+        id: user.id,
+        fullName: user.fullName,
+        nickname: user.nickname,
+        classGroup: user.classGroup,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        notes: user.notes,
+        pin: "",
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    { signal },
+  );
 }
-
-init();
-

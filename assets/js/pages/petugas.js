@@ -1,24 +1,23 @@
-import { mountAppShell, renderMetricCards } from "../app.js";
+import { renderMetricCards } from "../app.js";
 import { api } from "../api.js";
 import { renderDataTable } from "../components/table.js";
 import { showToast } from "../components/toast.js";
-import { requireAuth } from "../guards.js";
-import { formatCurrency, formatDate, escapeHtml } from "../utils.js";
+import { escapeHtml, formatCurrency, formatDate } from "../utils.js";
 
-async function init() {
-  const session = await requireAuth({ roles: ["petugas", "admin"] });
-  if (!session) return;
-
-  mountAppShell({ title: "Dashboard Petugas", pageKey: "petugas", session });
+export async function initPage({ session, setPageBusy, signal }) {
+  const finishBusy = setPageBusy(true, "Memuat dashboard petugas...");
 
   try {
     const summary = await api.dashboardSummary(session.token);
+    if (signal.aborted) return;
+
     const metrics = [
-      { label: "Transaksi saya", value: String(summary.data.transactionCount), note: "Berdasarkan user login" },
-      { label: "Total nilai", value: formatCurrency(summary.data.totalValue), note: "Akumulasi transaksi milik user" },
-      { label: "Total item", value: String(summary.data.totalItems), note: "Quantity total" },
-      { label: "Sisa stok", value: String(summary.data.totalRemaining), note: "Sisa item yang belum habis" },
+      { label: "Transaksi saya", value: String(summary.data.transactionCount), note: "Berdasarkan user login", accent: "primary", icon: "fa-receipt" },
+      { label: "Total nilai", value: formatCurrency(summary.data.totalValue), note: "Akumulasi transaksi milik user", accent: "success", icon: "fa-wallet" },
+      { label: "Total item", value: String(summary.data.totalItems), note: "Quantity total", accent: "info", icon: "fa-box-open" },
+      { label: "Sisa stok", value: String(summary.data.totalRemaining), note: "Sisa item yang belum habis", accent: "warning", icon: "fa-boxes" },
     ];
+
     renderMetricCards(document.querySelector("#summary-cards"), metrics);
 
     document.querySelector("#my-transactions").innerHTML = renderDataTable({
@@ -33,9 +32,10 @@ async function init() {
       emptyMessage: "Belum ada transaksi untuk user ini.",
     });
   } catch (error) {
-    showToast(error.message || "Gagal memuat dashboard petugas.", "error");
+    if (!signal.aborted) {
+      showToast(error.message || "Gagal memuat dashboard petugas.", "error");
+    }
+  } finally {
+    finishBusy();
   }
 }
-
-init();
-

@@ -65,6 +65,24 @@ export function includesText(parts, query) {
   return parts.some((part) => normalizeText(part).includes(normalizedQuery));
 }
 
+export function getInitials(value = "") {
+  const words = String(value)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!words.length) return "PK";
+
+  return words
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+export function isAbortError(error) {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
 export async function sha256Hex(value) {
   const encoder = new TextEncoder();
   const bytes = encoder.encode(String(value));
@@ -73,4 +91,3 @@ export async function sha256Hex(value) {
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 }
-

@@ -8,7 +8,7 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 - `Config.gs` konstanta app, schema sheet, dan property key
 - `Setup.gs` helper setup spreadsheet baru dan set PIN awal
 - `Auth.gs` login, logout, validasi session
-- `Users.gs`, `Transactions.gs`, `Savings.gs`, `Suppliers.gs`, `Dashboard.gs`
+- `Users.gs`, `Buyers.gs`, `Transactions.gs`, `Savings.gs`, `Finance.gs`, `Suppliers.gs`, `Dashboard.gs`
 
 ## Setup lokal
 
@@ -33,6 +33,7 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 - Spreadsheet ID live tidak disimpan di source. Gunakan `setSpreadsheetId()` atau `setupApplicationSpreadsheet()`.
 - `doGet` hanya untuk `health`.
 - Semua action aplikasi masuk lewat `doPost`.
+- Import CSV pembeli dijalankan dari frontend admin dan diteruskan ke action `importBuyers`.
 - GitHub tetap memakai akun Evander, tetapi Apps Script dan spreadsheet resmi dikelola oleh akun Ivan.
 - Seed awal membuat dua admin terpisah, satu Ivan dan satu Evander. PIN tidak disimpan mentah di `pin_hash`.
 - Untuk tombol `Run` di editor Apps Script, gunakan wrapper tanpa parameter agar tidak perlu mengedit source.

@@ -42,5 +42,13 @@ Contoh:
 - [ ] Health check berhasil
 - [ ] User admin bisa buka `users.html`
 - [ ] Petugas bisa input transaksi
-- [ ] Simpanan bisa ditampilkan
+- [ ] Admin bisa preview CSV pembeli tanpa error
+- [ ] Import CSV pembeli menghasilkan insert/update/arsip yang sesuai
+- [ ] Halaman `simpanan.html` bisa menyimpan keuangan harian dengan gross, total kembalian, dan net yang cocok
+- [ ] Buku kembalian bisa mengubah status `belum` menjadi `selesai`
+- [ ] Tabel saldo pembeli menampilkan buyer aktif/nonaktif dari hasil import
 - [ ] Laporan bisa memfilter transaksi
+- [ ] Navigasi antar halaman app tidak membuat sidebar dan navbar flicker
+- [ ] Spinner loading hanya muncul di area konten tengah saat load, save, atau delete
+- [ ] Favicon berubah saat request aktif lalu kembali normal setelah selesai
+- [ ] Sidebar tetap full-height dan bisa di-scroll sendiri saat konten halaman panjang

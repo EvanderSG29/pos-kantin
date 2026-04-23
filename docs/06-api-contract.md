@@ -31,12 +31,23 @@
 - `getCurrentUser`
 - `listUsers`
 - `saveUser`
+- `listBuyers`
+- `importBuyers`
 - `listTransactions`
 - `saveTransaction`
 - `deleteTransaction`
 - `listSavings`
+- `listDailyFinance`
+- `getDailyFinanceDetail`
+- `saveDailyFinance`
+- `deleteDailyFinance`
+- `listChangeEntries`
+- `updateChangeEntryStatus`
 - `dashboardSummary`
 - `listSuppliers`
+- `saveSupplier`
+- `listSupplierPayouts`
+- `settleSupplierPayout`
 
 ## Catatan auth
 
@@ -45,3 +56,12 @@
 - Session disimpan di sheet `sessions`
 - Frontend menyimpan token di `localStorage`
 
+## Catatan payload baru
+
+- `importBuyers` menerima `payload.rows[]` hasil parsing CSV frontend
+- `saveDailyFinance` menerima header harian dan `payload.changeEntries[]`
+- `updateChangeEntryStatus` menerima `id` dan `status` dengan nilai `belum` atau `selesai`
+- `listSuppliers` menerima `payload.includeInactive` untuk admin saat membuka master pemasok
+- `saveSupplier` menerima `supplierName`, `contactName`, `contactPhone`, `commissionRate`, `commissionBaseType`, `payoutTermDays`, `notes`, dan `isActive`
+- `saveTransaction` menghitung snapshot `commission_rate`, `commission_base_type`, dan `payout_term_days` dari master pemasok saat request diproses
+- `settleSupplierPayout` menerima `supplierId`, `dueDate`, dan `notes?` lalu membuat audit row di sheet `supplier_payouts`

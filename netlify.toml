@@ -1,10 +1,50 @@
 [build]
   publish = "."
 
+[[redirects]]
+  from = "/"
+  to = "/login.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/petugas"
+  to = "/petugas.html"
+  status = 200
+
+[[redirects]]
+  from = "/transaksi"
+  to = "/transaksi.html"
+  status = 200
+
+[[redirects]]
+  from = "/users"
+  to = "/users.html"
+  status = 200
+
+[[redirects]]
+  from = "/simpanan"
+  to = "/simpanan.html"
+  status = 200
+
+[[redirects]]
+  from = "/laporan"
+  to = "/laporan.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-

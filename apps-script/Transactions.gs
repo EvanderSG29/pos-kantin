@@ -1,4 +1,7 @@
 function sanitizeTransaction_(record) {
+  var payoutDueDate = record.payout_due_date || "";
+  var isSettled = Boolean(record.supplier_payout_id);
+
   return {
     id: record.id,
     transactionDate: record.transaction_date,
@@ -10,12 +13,40 @@ function sanitizeTransaction_(record) {
     unitName: record.unit_name,
     quantity: toNumber_(record.quantity),
     remainingQuantity: toNumber_(record.remaining_quantity),
+    soldQuantity: toNumber_(record.sold_quantity),
+    costPrice: toNumber_(record.cost_price),
     unitPrice: toNumber_(record.unit_price),
-    totalValue: toNumber_(record.total_value),
+    grossSales: toNumber_(record.gross_sales, record.total_value),
+    totalValue: toNumber_(record.total_value, record.gross_sales),
+    profitAmount: toNumber_(record.profit_amount),
+    commissionRate: toNumber_(record.commission_rate, 10),
+    commissionBaseType: normalizeCommissionBaseType_(record.commission_base_type),
+    commissionAmount: toNumber_(record.commission_amount),
+    supplierNetAmount: toNumber_(record.supplier_net_amount),
+    payoutTermDays: toNumber_(record.payout_term_days),
+    payoutDueDate: payoutDueDate,
+    supplierPayoutId: record.supplier_payout_id || "",
+    dueStatus: isSettled ? "settled" : getDueStatusCode_(payoutDueDate),
     notes: record.notes,
     createdAt: record.created_at,
     updatedAt: record.updated_at,
   };
+}
+
+function ensureTransactionAccess_(record, context) {
+  if (!record || record.deleted_at) {
+    throw new Error("Transaksi tidak ditemukan.");
+  }
+
+  if (context.user.role !== "admin" && String(record.input_by_user_id) !== String(context.user.id)) {
+    throw new Error("Transaksi ini bukan milik Anda.");
+  }
+}
+
+function ensureTransactionMutable_(record) {
+  if (record && record.supplier_payout_id) {
+    throw new Error("Transaksi yang sudah masuk payout pemasok tidak bisa diubah atau dihapus.");
+  }
 }
 
 function listTransactionsAction_(payload, token) {
@@ -48,6 +79,18 @@ function listTransactionsAction_(payload, token) {
     });
   }
 
+  if (payload.supplierId) {
+    items = items.filter(function (record) {
+      return String(record.supplier_id) === String(payload.supplierId);
+    });
+  }
+
+  if (payload.commissionBaseType) {
+    items = items.filter(function (record) {
+      return normalizeCommissionBaseType_(record.commission_base_type) === normalizeCommissionBaseType_(payload.commissionBaseType);
+    });
+  }
+
   if (payload.query || payload.search) {
     var query = normalizeText_(payload.query || payload.search);
     items = items.filter(function (record) {
@@ -64,7 +107,7 @@ function listTransactionsAction_(payload, token) {
 
   return sortByDateDesc_(
     items.map(sanitizeTransaction_),
-    "transactionDate",
+    "transactionDate"
   );
 }
 
@@ -74,37 +117,76 @@ function saveTransactionAction_(payload, token) {
 
   var now = nowIso_();
   var existing = payload.id ? getRecordById_("transactions", payload.id) : null;
-  if (existing && context.user.role !== "admin" && String(existing.input_by_user_id) !== String(context.user.id)) {
-    throw new Error("Transaksi ini bukan milik Anda.");
+  if (existing) {
+    ensureTransactionAccess_(existing, context);
+    ensureTransactionMutable_(existing);
   }
 
-  var supplierRecord = payload.supplierId ? getRecordById_("suppliers", payload.supplierId) : null;
-  var supplierName = String(payload.supplierName || (supplierRecord ? supplierRecord.supplier_name : "") || "").trim();
-  if (!payload.transactionDate || !payload.itemName || !payload.unitName || !supplierName) {
+  if (!payload.supplierId) {
+    throw new Error("Pemasok wajib dipilih dari master pemasok.");
+  }
+
+  var supplierRecord = getRecordById_("suppliers", payload.supplierId);
+  if (!supplierRecord) {
+    throw new Error("Pemasok tidak ditemukan.");
+  }
+
+  if (String(supplierRecord.is_active) === "false" && !existing) {
+    throw new Error("Pemasok nonaktif tidak bisa dipakai untuk transaksi baru.");
+  }
+
+  if (!payload.transactionDate || !payload.itemName || !payload.unitName) {
     throw new Error("Tanggal, pemasok, makanan, dan satuan wajib diisi.");
   }
 
-  var quantity = toNumber_(payload.quantity, 0);
-  var remainingQuantity = toNumber_(payload.remainingQuantity, 0);
-  var unitPrice = toNumber_(payload.unitPrice, 0);
+  var quantity = parseNonNegativeNumberStrict_(payload.quantity, "Jumlah titip");
+  var remainingQuantity = parseNonNegativeNumberStrict_(payload.remainingQuantity, "Sisa");
+  var unitPrice = parseNonNegativeNumberStrict_(payload.unitPrice, "Harga jual");
+  var costPrice = parseNonNegativeNumberStrict_(payload.costPrice, "Harga modal");
+
+  if (remainingQuantity > quantity) {
+    throw new Error("Sisa tidak boleh lebih besar dari jumlah titip.");
+  }
+
+  var metrics = calculateTransactionMetrics_({
+    quantity: quantity,
+    remainingQuantity: remainingQuantity,
+    unitPrice: unitPrice,
+    costPrice: costPrice,
+    commissionRate: supplierRecord.commission_rate,
+    commissionBaseType: supplierRecord.commission_base_type,
+    payoutTermDays: supplierRecord.payout_term_days,
+    transactionDate: payload.transactionDate,
+  });
 
   var record = existing || {
     id: generateId_("TRX"),
     created_at: now,
     input_by_user_id: context.user.id,
     input_by_name: context.user.full_name,
+    supplier_payout_id: "",
     deleted_at: "",
   };
 
   record.transaction_date = payload.transactionDate;
-  record.supplier_id = payload.supplierId || "";
-  record.supplier_name = supplierName;
+  record.supplier_id = supplierRecord.id;
+  record.supplier_name = supplierRecord.supplier_name;
   record.item_name = String(payload.itemName).trim();
   record.unit_name = String(payload.unitName).trim();
-  record.quantity = quantity;
-  record.remaining_quantity = remainingQuantity;
-  record.unit_price = unitPrice;
-  record.total_value = quantity * unitPrice;
+  record.quantity = metrics.quantity;
+  record.remaining_quantity = metrics.remainingQuantity;
+  record.sold_quantity = metrics.soldQuantity;
+  record.cost_price = metrics.costPrice;
+  record.unit_price = metrics.unitPrice;
+  record.gross_sales = metrics.grossSales;
+  record.profit_amount = metrics.profitAmount;
+  record.commission_rate = metrics.commissionRate;
+  record.commission_base_type = metrics.commissionBaseType;
+  record.commission_amount = metrics.commissionAmount;
+  record.supplier_net_amount = metrics.supplierNetAmount;
+  record.payout_term_days = metrics.payoutTermDays;
+  record.payout_due_date = metrics.payoutDueDate;
+  record.total_value = metrics.totalValue;
   record.notes = String(payload.notes || "").trim();
   record.updated_at = now;
   record.deleted_at = "";
@@ -118,13 +200,8 @@ function deleteTransactionAction_(payload, token) {
   ensureRole_(context.user, ["admin", "petugas"]);
 
   var record = getRecordById_("transactions", payload.id);
-  if (!record || record.deleted_at) {
-    throw new Error("Transaksi tidak ditemukan.");
-  }
-
-  if (context.user.role !== "admin" && String(record.input_by_user_id) !== String(context.user.id)) {
-    throw new Error("Transaksi ini bukan milik Anda.");
-  }
+  ensureTransactionAccess_(record, context);
+  ensureTransactionMutable_(record);
 
   record.deleted_at = nowIso_();
   record.updated_at = record.deleted_at;
@@ -132,4 +209,3 @@ function deleteTransactionAction_(payload, token) {
 
   return sanitizeTransaction_(record);
 }
-

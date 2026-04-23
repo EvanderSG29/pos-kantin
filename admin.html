@@ -2,46 +2,130 @@
 <html lang="id">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Dashboard Admin | POS Kantin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/main.css">
-    <link rel="stylesheet" href="./assets/css/dashboard.css">
-    <link rel="stylesheet" href="./assets/css/table.css">
-    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+    <link href="./assets/vendor/sb-admin-2/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="./assets/vendor/sb-admin-2/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="./assets/css/sb-admin-custom.css" rel="stylesheet">
   </head>
-  <body class="app-page">
-    <div class="shell">
-      <aside id="sidebar" class="shell__sidebar"></aside>
-      <div class="shell__body">
-        <header id="topbar" class="shell__topbar"></header>
-        <main class="page stack page--dashboard">
-          <section class="page-header">
-            <div>
-              <p class="eyebrow">Admin</p>
-              <h1>Dashboard ringkas</h1>
-            </div>
-            <a class="button button--ghost" href="./laporan.html">Buka laporan</a>
-          </section>
+  <body class="pos-shell-page">
+    <div id="app-shell">
+      <aside id="app-sidebar"></aside>
 
-          <section id="summary-cards" class="card-grid"></section>
+      <div class="pos-shell-body">
+        <header id="app-topbar"></header>
 
-          <section class="panel stack">
-            <div class="panel__header">
-              <h2>Transaksi terbaru</h2>
-              <a class="button button--secondary" href="./transaksi.html">Kelola transaksi</a>
-            </div>
-            <div id="recent-transactions"></div>
-          </section>
+        <main id="app-main" class="pos-main" aria-live="polite" aria-busy="false">
+          <div id="app-page-slot"></div>
+          <div id="app-main-loading" class="pos-main-loading" hidden>
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <p id="app-main-loading-text" class="mb-0">Memuat konten...</p>
+          </div>
         </main>
       </div>
     </div>
 
+    <button id="scroll-to-top" class="scroll-to-top rounded" type="button" hidden aria-label="Kembali ke atas">
+      <i class="fas fa-angle-up"></i>
+    </button>
+
     <div id="modal-root"></div>
     <div id="toast-root"></div>
-    <script type="module" src="./assets/js/pages/admin.js"></script>
+
+    <template id="page-template" data-page-key="admin" data-page-title="Dashboard Admin">
+      <section class="pos-page-view">
+        <div class="container-fluid">
+          <div class="pos-page-header">
+            <div>
+              <p class="pos-section-title">Admin</p>
+              <h1 class="h3 mb-1 text-gray-800">Dashboard ringkas</h1>
+              <p class="small text-gray-600 mb-0">Pantau omzet hari ini, hak kantin, utang pemasok yang jatuh tempo, uang kembalian, dan jalankan import saldo awal via CSV dari satu dashboard.</p>
+            </div>
+            <div class="pos-form-actions">
+              <a class="btn btn-outline-primary shadow-sm" href="./transaksi.html">
+                <i class="fas fa-cash-register fa-sm mr-2"></i>Buka transaksi
+              </a>
+              <a class="btn btn-outline-info shadow-sm" href="./pemasok.html">
+                <i class="fas fa-truck-loading fa-sm mr-2"></i>Kelola pemasok
+              </a>
+              <a class="btn btn-primary shadow-sm" href="./pembayaran.html">
+                <i class="fas fa-file-invoice-dollar fa-sm text-white-50 mr-2"></i>Buka pembayaran
+              </a>
+            </div>
+          </div>
+
+          <section id="summary-cards" class="pos-summary-grid"></section>
+
+          <div class="row">
+            <div class="col-xl-7 col-lg-7">
+              <section class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Import saldo pembeli via CSV</h6>
+                  <span class="badge badge-light text-uppercase">Admin only</span>
+                </div>
+                <div class="card-body">
+                  <form id="buyer-import-form" class="mb-4">
+                    <div class="form-group mb-3">
+                      <label for="buyer-import-file">File CSV</label>
+                      <input id="buyer-import-file" type="file" class="form-control-file" accept=".csv,text/csv" required>
+                      <small class="form-text text-muted">Struktur wajib: <code>nama_pembeli</code>, <code>kelas/kategori</code>, <code>saldo_awal</code>. Alias aman untuk kolom kedua tetap diterima.</small>
+                    </div>
+
+                    <div class="pos-form-actions">
+                      <button type="submit" id="buyer-import-submit" class="btn btn-primary shadow-sm" disabled>
+                        <i class="fas fa-file-import fa-sm mr-2"></i>Import ke database
+                      </button>
+                      <button type="button" id="buyer-import-reset" class="btn btn-outline-secondary">Reset preview</button>
+                    </div>
+                  </form>
+
+                  <div id="buyer-import-summary" class="mb-3"></div>
+                  <div id="buyer-import-errors" class="mb-3"></div>
+                  <div id="buyer-import-preview"></div>
+                  <div id="buyer-import-result" class="mt-3"></div>
+                </div>
+              </section>
+            </div>
+
+            <div class="col-xl-5 col-lg-5">
+              <section class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Snapshot keuangan</h6>
+                </div>
+                <div class="card-body" id="latest-finance-summary"></div>
+              </section>
+
+              <section class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Bucket termin payout</h6>
+                </div>
+                <div class="card-body" id="payout-buckets"></div>
+              </section>
+            </div>
+          </div>
+
+          <section class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+              <h6 class="m-0 font-weight-bold text-primary">Transaksi terbaru</h6>
+              <a class="btn btn-sm btn-outline-primary" href="./transaksi.html">Kelola transaksi</a>
+            </div>
+            <div class="card-body" id="recent-transactions"></div>
+          </section>
+        </div>
+
+        <footer class="sticky-footer bg-white">
+          <div class="container my-auto">
+            <div class="copyright text-center my-auto pos-footer-note">
+              <span>Dashboard admin merangkum transaksi, payout pemasok, buku kembalian, dan import pembeli dari CSV tahun ajaran baru.</span>
+            </div>
+          </div>
+        </footer>
+      </section>
+    </template>
+
+    <script type="module" src="./assets/js/app.js"></script>
   </body>
 </html>
-
