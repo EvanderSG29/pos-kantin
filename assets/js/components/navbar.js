@@ -9,8 +9,8 @@ export function renderNavbar({ title, session }) {
 
   return `
     <nav class="navbar navbar-expand navbar-light bg-white topbar shadow pos-topbar">
-      <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3 pos-shell-toggle" type="button" aria-label="Toggle sidebar">
-        <i class="fa fa-bars"></i>
+      <button id="sidebarToggleTop" class="btn border-0 pos-shell-toggle" type="button" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
       </button>
 
       <div class="d-flex flex-column min-w-0">

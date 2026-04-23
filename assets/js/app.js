@@ -243,6 +243,30 @@ function syncResponsiveShell() {
   }
 }
 
+function syncToastTopbarOffset() {
+  const root = document.documentElement;
+
+  if (!document.body.classList.contains("pos-shell-page")) {
+    root.style.removeProperty("--pos-toast-topbar-offset");
+    return;
+  }
+
+  const topbar = document.querySelector("#app-topbar");
+  const topbarHeight = Math.ceil(topbar?.getBoundingClientRect?.().height || 0);
+
+  if (topbarHeight > 0) {
+    root.style.setProperty("--pos-toast-topbar-offset", `${topbarHeight}px`);
+    return;
+  }
+
+  root.style.removeProperty("--pos-toast-topbar-offset");
+}
+
+function syncShellLayout() {
+  syncResponsiveShell();
+  syncToastTopbarOffset();
+}
+
 function updateScrollButton() {
   const scrollButton = document.querySelector("#scroll-to-top");
   if (!scrollButton) return;
@@ -305,7 +329,7 @@ function bindChromeEvents() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  window.addEventListener("resize", syncResponsiveShell, { passive: true });
+  window.addEventListener("resize", syncShellLayout, { passive: true });
   window.addEventListener("scroll", updateScrollButton, { passive: true });
 
   shellState.chromeReady = true;
@@ -335,13 +359,14 @@ function renderShellChrome(session, route) {
   }
 
   bindChromeEvents();
-  syncResponsiveShell();
+  syncShellLayout();
   updateScrollButton();
 }
 
 function syncChromeState(route) {
   document.title = `${route.title} | POS Kantin`;
   document.querySelector("#topbar-page-title")?.replaceChildren(document.createTextNode(route.title));
+  syncToastTopbarOffset();
 
   const availableKeys = new Set(
     [...document.querySelectorAll("[data-route-key]")].map((link) => link.dataset.routeKey),

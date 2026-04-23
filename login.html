@@ -11,58 +11,60 @@
     <link href="./assets/vendor/sb-admin-2/css/sb-admin-2.min.css" rel="stylesheet">
     <link href="./assets/css/sb-admin-custom.css" rel="stylesheet">
   </head>
-  <body class="bg-gradient-primary">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-xl-10 col-lg-12 col-md-10">
-          <div class="card o-hidden border-0 shadow-lg my-5">
-            <div class="card-body p-0">
-              <div class="row">
-                <div class="col-lg-6 d-none d-lg-flex pos-login-side"></div>
-                <div class="col-lg-6">
-                  <div class="p-5 pos-login-copy">
-                    <div class="text-center mb-4">
-                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-2">POS Kantin</div>
-                      <h1 class="h4 text-gray-900 mb-2">Masuk sebagai admin atau petugas</h1>
-                      <p class="mb-0 small text-gray-600">Tampilan admin berbasis Bootstrap, backend Apps Script, dan data Google Sheets.</p>
-                    </div>
+  <body class="pos-auth-page">
+    <main class="pos-auth-main">
+      <section class="pos-auth-shell" aria-labelledby="auth-title">
+        <div id="app-main" class="card border-0 shadow-lg pos-auth-card" aria-live="polite" aria-busy="false">
+          <div class="card-body p-0">
+            <div class="pos-auth-content">
+              <header class="pos-auth-header">
+                <div class="pos-auth-badge">POS Kantin</div>
+                <div>
+                  <h1 id="auth-title" class="h3 text-gray-900 mb-2">Masuk sebagai admin atau petugas</h1>
+                  <p class="mb-0 text-gray-600">Tampilan admin berbasis Bootstrap, backend Apps Script, dan data Google Sheets.</p>
+                </div>
+              </header>
 
-                    <div class="alert alert-light small pos-login-note mb-4" role="alert">
-                      Gunakan email dan PIN dari seed backend. Jika Anda masih preview lokal, sesuaikan <code>assets/js/config.js</code> terlebih dulu.
-                    </div>
+              <div class="alert alert-light small pos-auth-note" role="alert">
+                Gunakan email dan PIN dari seed backend. Jika Anda masih preview lokal, sesuaikan <code>assets/js/config.js</code> terlebih dulu.
+              </div>
 
-                    <form id="login-form" class="user">
-                      <div class="form-group">
-                        <input id="email" name="email" type="email" class="form-control form-control-user" placeholder="nama@email.com" required>
-                      </div>
+              <form id="login-form" class="user pos-auth-form">
+                <div class="form-group">
+                  <input id="email" name="email" type="email" class="form-control form-control-user" placeholder="nama@email.com" required>
+                </div>
 
-                      <div class="form-group">
-                        <input id="pin" name="pin" type="password" inputmode="numeric" class="form-control form-control-user" placeholder="Masukkan PIN" required>
-                      </div>
+                <div class="form-group">
+                  <input id="pin" name="pin" type="password" inputmode="numeric" class="form-control form-control-user" placeholder="Masukkan PIN" required>
+                </div>
 
-                      <button type="submit" class="btn btn-primary btn-user btn-block shadow-sm">
-                        <i class="fas fa-lock mr-2"></i>Masuk
-                      </button>
-                    </form>
+                <button type="submit" class="btn btn-primary btn-user btn-block shadow-sm">
+                  <i class="fas fa-lock mr-2"></i>Masuk
+                </button>
+              </form>
 
-                    <hr>
+              <hr class="my-0">
 
-                    <p class="small text-gray-600 mb-3 pos-login-help">
-                      Saat Web App Apps Script sudah siap, pastikan <code>API_BASE_URL</code> mengarah ke URL deployment aktif.
-                    </p>
+              <div class="pos-auth-support">
+                <p class="small text-gray-600 mb-0 pos-login-help">
+                  Saat Web App Apps Script sudah siap, pastikan <code>API_BASE_URL</code> mengarah ke URL deployment aktif.
+                </p>
 
-                    <div class="pos-auth-links small">
-                      <a href="./docs/README.md">Buka panduan proyek</a>
-                      <a href="./docs/09-checklist-pemula.md">Checklist setup</a>
-                    </div>
-                  </div>
+                <div class="pos-auth-links small">
+                  <a href="./docs/README.md">Buka panduan proyek</a>
+                  <a href="./docs/09-checklist-pemula.md">Checklist setup</a>
                 </div>
               </div>
             </div>
           </div>
+
+          <div id="app-main-loading" class="pos-main-loading pos-auth-loading" hidden>
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <p id="app-main-loading-text" class="mb-0">Memuat konten...</p>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
 
     <div id="toast-root"></div>
     <script type="module" src="./assets/js/pages/login.js"></script>
