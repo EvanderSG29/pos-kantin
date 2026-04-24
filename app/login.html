@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Login | POS Kantin</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+    <link href="./assets/vendor/sb-admin-2/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="./assets/vendor/sb-admin-2/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="./assets/css/sb-admin-custom.css" rel="stylesheet">
+  </head>
+  <body class="pos-auth-page">
+    <main class="pos-auth-main">
+      <section class="pos-auth-shell" aria-labelledby="auth-title">
+        <div id="app-main" class="card border-0 shadow-lg pos-auth-card" aria-live="polite" aria-busy="false">
+          <div class="card-body p-0">
+            <div class="pos-auth-content">
+              <header class="pos-auth-header">
+                <div class="pos-auth-badge">POS Kantin</div>
+                <div>
+                  <h1 id="auth-title" class="h3 text-gray-900 mb-2">Masuk sebagai admin atau petugas</h1>
+                  <p class="mb-0 text-gray-600">Aplikasi desktop Electron offline-first dengan SQLite lokal dan sinkronisasi Google Sheets via Apps Script.</p>
+                </div>
+              </header>
+
+              <div class="alert alert-light small pos-auth-note" role="alert">
+                Login online pertama akan menyiapkan profil offline di perangkat ini. Jika koneksi putus setelah itu, user yang sudah pernah login tetap bisa masuk secara lokal.
+              </div>
+
+              <form id="login-form" class="user pos-auth-form">
+                <div class="form-group">
+                  <input id="email" name="email" type="email" class="form-control form-control-user" placeholder="nama@email.com" required>
+                </div>
+
+                <div class="form-group">
+                  <input id="pin" name="pin" type="password" inputmode="numeric" class="form-control form-control-user" placeholder="Masukkan PIN" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-user btn-block shadow-sm">
+                  <i class="fas fa-lock mr-2"></i>Masuk
+                </button>
+              </form>
+
+              <hr class="my-0">
+
+              <div class="pos-auth-support">
+                <p class="small text-gray-600 mb-0 pos-login-help">
+                  URL Web App Apps Script disimpan di file konfigurasi lokal Electron, bukan di source repo.
+                </p>
+
+                <div class="pos-auth-links small">
+                  <a href="./docs/README.md">Buka panduan proyek</a>
+                  <a href="./docs/09-checklist-pemula.md">Checklist setup</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="app-main-loading" class="pos-main-loading pos-auth-loading" hidden>
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <p id="app-main-loading-text" class="mb-0">Memuat konten...</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast-root"></div>
+    <script type="module" src="./assets/js/pages/login.js"></script>
+  </body>
+</html>

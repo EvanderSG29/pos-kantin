@@ -1,5 +1,7 @@
 # 07. Struktur Frontend
 
+Semua path di dokumen ini relatif ke folder `app/`.
+
 ## Root HTML
 
 - `index.html`
@@ -71,5 +73,5 @@
 
 ## Mode config
 
-- Default source memakai `USE_MOCK_API: true`
-- Ganti ke API live setelah Apps Script Web App siap
+- Renderer desktop berjalan dalam `DESKTOP_MODE`.
+- URL Web App live tidak lagi di-hardcode di source frontend, tetapi dibaca dari config lokal Electron.

@@ -46,7 +46,7 @@ async function loadModule(filePath) {
   return module;
 }
 
-const financeModule = await loadModule("./assets/js/finance.js");
+const financeModule = await loadModule("./app/assets/js/finance.js");
 const {
   calculateTransactionMetrics,
   COMMISSION_BASE_TYPES,

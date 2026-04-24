@@ -1,0 +1,20 @@
+{
+  "name": "pos-kantin-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Workspace dev untuk POS Kantin desktop berbasis Electron.",
+  "scripts": {
+    "dev": "node scripts/run-electron.cjs app",
+    "test:node": "node --experimental-vm-modules tests/run-node.mjs",
+    "test:electron": "node scripts/run-electron.cjs app/tests/electron-offline.test.cjs",
+    "test": "npm run test:node && npm run test:electron",
+    "dist:win": "electron-builder --win nsis",
+    "install:app-deps": "npm install --prefix app",
+    "postinstall": "npm run install:app-deps && electron-builder install-app-deps",
+    "rebuild:electron": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "electron": "^41.3.0",
+    "electron-builder": "^26.8.1"
+  }
+}

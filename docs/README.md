@@ -13,5 +13,9 @@ Mulai dari urutan ini supaya setup tidak terasa berat:
 9. [09-checklist-pemula.md](./09-checklist-pemula.md)
 10. [10-codex-context.md](./10-codex-context.md)
 11. [11-multi-account-setup.md](./11-multi-account-setup.md)
+12. [12-electron-arsitektur.md](./12-electron-arsitektur.md)
+13. [13-electron-setup.md](./13-electron-setup.md)
+14. [14-electron-sync.md](./14-electron-sync.md)
+15. [15-electron-packaging.md](./15-electron-packaging.md)
 
 Dokumen sengaja dipecah pendek supaya tiap langkah bisa dikerjakan sedikit demi sedikit.

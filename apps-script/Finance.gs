@@ -127,13 +127,19 @@ function listDailyFinanceAction_(payload, token) {
     return !record.deleted_at;
   });
 
-  return sortDailyFinanceRecords_(items)
+  var summarizedItems = sortDailyFinanceRecords_(items)
     .map(function (record) {
       var relatedEntries = allEntries.filter(function (entry) {
         return String(entry.daily_finance_id) === String(record.id);
       }).map(sanitizeChangeEntry_);
       return buildDailyFinanceSummary_(record, relatedEntries);
     });
+  var paged = paginateRecords_(summarizedItems, payload);
+
+  return {
+    items: paged.items,
+    pagination: paged.pagination,
+  };
 }
 
 function getDailyFinanceDetailAction_(payload, token) {
@@ -372,7 +378,7 @@ function listChangeEntriesAction_(payload, token) {
     });
   }
 
-  return items
+  var sortedItems = items
     .map(sanitizeChangeEntry_)
     .sort(function (left, right) {
       if (left.status !== right.status) {
@@ -383,6 +389,12 @@ function listChangeEntriesAction_(payload, token) {
       if (dateDelta !== 0) return dateDelta;
       return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime();
     });
+  var paged = paginateRecords_(sortedItems, payload);
+
+  return {
+    items: paged.items,
+    pagination: paged.pagination,
+  };
 }
 
 function updateChangeEntryStatusAction_(payload, token) {

@@ -1,0 +1,10 @@
+{
+  "name": "pos-kantin-desktop",
+  "version": "0.1.0",
+  "description": "POS Kantin desktop offline-first berbasis Electron, SQLite, dan Google Apps Script.",
+  "author": "POS Kantin",
+  "main": "electron/main.cjs",
+  "dependencies": {
+    "better-sqlite3": "^12.9.0"
+  }
+}

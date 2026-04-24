@@ -1,0 +1,19 @@
+appId: com.poskantin.desktop
+productName: POS Kantin
+directories:
+  app: app
+  output: dist
+files:
+  - "**/*"
+  - "!tests/**"
+  - "!node_modules/.cache/**"
+asar: true
+win:
+  target:
+    - target: nsis
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false

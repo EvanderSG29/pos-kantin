@@ -75,7 +75,7 @@ Untuk testing development, Anda juga bisa memakai `Deploy > Test deployments` ya
 
 - Source repo ini sudah siap untuk web app
 - `clasp push` mengirim source, tetapi URL web app tetap mengikuti deployment `Web app` di editor Apps Script
-- URL web app final tetap diisi manual ke `assets/js/config.js`
+- URL web app final untuk desktop diisi ke file config lokal Electron yang dijelaskan di `docs/13-electron-setup.md`
 - Jangan commit URL final jika Anda ingin menjaga repo tetap netral
 - Script owner dan spreadsheet owner sengaja sama-sama Ivan agar izin backend dan database tidak bercampur akun
 - Frontend repo ini mengirim body POST sebagai `text/plain` agar browser tidak mengirim preflight `OPTIONS` ke Apps Script web app

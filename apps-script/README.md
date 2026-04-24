@@ -7,6 +7,7 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 - `Code.gs` routing `doGet` dan `doPost`
 - `Config.gs` konstanta app, schema sheet, dan property key
 - `Setup.gs` helper setup spreadsheet baru dan set PIN awal
+- `DesktopSync.gs` delta pull untuk desktop Electron
 - `Auth.gs` login, logout, validasi session
 - `Users.gs`, `Buyers.gs`, `Transactions.gs`, `Savings.gs`, `Finance.gs`, `Suppliers.gs`, `Dashboard.gs`
 

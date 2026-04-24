@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Dashboard Admin | POS Kantin</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+    <link href="./assets/vendor/sb-admin-2/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="./assets/vendor/sb-admin-2/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="./assets/css/sb-admin-custom.css" rel="stylesheet">
+  </head>
+  <body class="pos-shell-page">
+    <div id="app-shell">
+      <aside id="app-sidebar"></aside>
+
+      <div class="pos-shell-body">
+        <header id="app-topbar"></header>
+
+        <main id="app-main" class="pos-main" aria-live="polite" aria-busy="false">
+          <div id="app-page-slot"></div>
+          <div id="app-main-loading" class="pos-main-loading" hidden>
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <p id="app-main-loading-text" class="mb-0">Memuat konten...</p>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <button id="scroll-to-top" class="scroll-to-top rounded" type="button" hidden aria-label="Kembali ke atas">
+      <i class="fas fa-angle-up"></i>
+    </button>
+
+    <div id="modal-root"></div>
+    <div id="toast-root"></div>
+
+    <template id="page-template" data-page-key="admin" data-page-title="Dashboard Admin">
+      <section class="pos-page-view">
+        <div class="container-fluid">
+          <div class="pos-page-header">
+            <div>
+              <p class="pos-section-title">Admin</p>
+              <h1 class="h3 mb-1 text-gray-800">Dashboard desktop offline-first</h1>
+              <p class="small text-gray-600 mb-0">Pantau transaksi lokal, antrean sinkronisasi, dan snapshot master pemasok dari aplikasi Electron tanpa bergantung pada koneksi aktif setiap saat.</p>
+            </div>
+            <div class="pos-form-actions">
+              <a class="btn btn-outline-primary shadow-sm" href="./transaksi.html">
+                <i class="fas fa-cash-register fa-sm mr-2"></i>Buka transaksi
+              </a>
+              <a class="btn btn-outline-info shadow-sm" href="./pemasok.html">
+                <i class="fas fa-truck-loading fa-sm mr-2"></i>Kelola pemasok
+              </a>
+            </div>
+          </div>
+
+          <section id="summary-cards" class="pos-summary-grid"></section>
+
+          <div class="row">
+            <div class="col-xl-6 col-lg-6">
+              <section class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Status sinkronisasi</h6>
+                </div>
+                <div class="card-body" id="sync-status-panel"></div>
+              </section>
+            </div>
+
+            <div class="col-xl-6 col-lg-6">
+              <section class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Snapshot master lokal</h6>
+                </div>
+                <div class="card-body" id="supplier-snapshot"></div>
+              </section>
+            </div>
+          </div>
+
+          <section class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+              <h6 class="m-0 font-weight-bold text-primary">Transaksi terbaru</h6>
+              <a class="btn btn-sm btn-outline-primary" href="./transaksi.html">Kelola transaksi</a>
+            </div>
+            <div class="card-body" id="recent-transactions"></div>
+          </section>
+        </div>
+
+        <footer class="sticky-footer bg-white">
+          <div class="container my-auto">
+            <div class="copyright text-center my-auto pos-footer-note">
+              <span>Desktop v1 memprioritaskan transaksi, master pemasok, login offline, dan sinkronisasi queue ke Google Sheets.</span>
+            </div>
+          </div>
+        </footer>
+      </section>
+    </template>
+
+    <script type="module" src="./assets/js/app.js"></script>
+  </body>
+</html>

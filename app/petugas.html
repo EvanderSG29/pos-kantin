@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Dashboard Petugas | POS Kantin</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+    <link href="./assets/vendor/sb-admin-2/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="./assets/vendor/sb-admin-2/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="./assets/css/sb-admin-custom.css" rel="stylesheet">
+  </head>
+  <body class="pos-shell-page">
+    <div id="app-shell">
+      <aside id="app-sidebar"></aside>
+
+      <div class="pos-shell-body">
+        <header id="app-topbar"></header>
+
+        <main id="app-main" class="pos-main" aria-live="polite" aria-busy="false">
+          <div id="app-page-slot"></div>
+          <div id="app-main-loading" class="pos-main-loading" hidden>
+            <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            <p id="app-main-loading-text" class="mb-0">Memuat konten...</p>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <button id="scroll-to-top" class="scroll-to-top rounded" type="button" hidden aria-label="Kembali ke atas">
+      <i class="fas fa-angle-up"></i>
+    </button>
+
+    <div id="modal-root"></div>
+    <div id="toast-root"></div>
+
+    <template id="page-template" data-page-key="petugas" data-page-title="Dashboard Petugas">
+      <section class="pos-page-view">
+        <div class="container-fluid">
+          <div class="pos-page-header">
+            <div>
+              <p class="pos-section-title">Petugas</p>
+              <h1 class="h3 mb-1 text-gray-800">Ringkasan shift</h1>
+              <p class="small text-gray-600 mb-0">Pantau transaksi lokal Anda dan jalankan sinkronisasi saat koneksi tersedia tanpa menunggu respons cloud untuk setiap input.</p>
+            </div>
+            <a class="btn btn-primary shadow-sm" href="./transaksi.html">
+              <i class="fas fa-plus fa-sm text-white-50 mr-2"></i>Input transaksi
+            </a>
+          </div>
+
+          <section id="summary-cards" class="pos-summary-grid"></section>
+
+          <section class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Status sinkronisasi</h6>
+            </div>
+            <div class="card-body" id="sync-status-panel"></div>
+          </section>
+
+          <section class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+              <h6 class="m-0 font-weight-bold text-primary">Transaksi saya</h6>
+              <a class="btn btn-sm btn-outline-primary" href="./transaksi.html">Buka transaksi</a>
+            </div>
+            <div class="card-body" id="my-transactions"></div>
+          </section>
+        </div>
+
+        <footer class="sticky-footer bg-white">
+          <div class="container my-auto">
+            <div class="copyright text-center my-auto pos-footer-note">
+              <span>Dashboard petugas fokus pada input transaksi cepat secara lokal dan sinkronisasi saat online.</span>
+            </div>
+          </div>
+        </footer>
+      </section>
+    </template>
+
+    <script type="module" src="./assets/js/app.js"></script>
+  </body>
+</html>

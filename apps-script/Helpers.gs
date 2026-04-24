@@ -186,6 +186,49 @@ function sortByUpdatedAtDesc_(items, fieldName, fallbackField) {
   });
 }
 
+function normalizePage_(value, fallback) {
+  return Math.max(Math.floor(toNumber_(value, fallback || 1)), 1);
+}
+
+function normalizePageSize_(value, fallback) {
+  return Math.max(Math.floor(toNumber_(value, fallback || 10)), 1);
+}
+
+function buildPagination_(totalItems, page, pageSize, itemCount) {
+  var safeTotalItems = Math.max(Math.floor(toNumber_(totalItems, 0)), 0);
+  var safePageSize = normalizePageSize_(pageSize, 10);
+  var totalPages = Math.max(Math.ceil(safeTotalItems / safePageSize), 1);
+  var safePage = Math.min(normalizePage_(page, 1), totalPages);
+  var safeItemCount = Math.max(Math.floor(toNumber_(itemCount, 0)), 0);
+  var startItem = safeTotalItems ? ((safePage - 1) * safePageSize) + 1 : 0;
+  var endItem = safeTotalItems ? Math.min(startItem + safeItemCount - 1, safeTotalItems) : 0;
+
+  return {
+    page: safePage,
+    pageSize: safePageSize,
+    totalItems: safeTotalItems,
+    totalPages: totalPages,
+    itemCount: safeItemCount,
+    startItem: startItem,
+    endItem: endItem,
+    hasPrev: safePage > 1,
+    hasNext: safePage < totalPages,
+  };
+}
+
+function paginateRecords_(items, payload) {
+  var pageSize = normalizePageSize_(payload && payload.pageSize, 10);
+  var totalPages = Math.max(Math.ceil(items.length / pageSize), 1);
+  var page = Math.min(normalizePage_(payload && payload.page, 1), totalPages);
+  var offset = (page - 1) * pageSize;
+  var pagedItems = items.slice(offset, offset + pageSize);
+
+  return {
+    items: pagedItems,
+    pagination: buildPagination_(items.length, page, pageSize, pagedItems.length),
+  };
+}
+
 function todayIsoDate_() {
   return Utilities.formatDate(new Date(), CONFIG.DEFAULT_TIMEZONE, "yyyy-MM-dd");
 }

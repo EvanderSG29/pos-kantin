@@ -68,6 +68,8 @@ function doPost(e) {
         return ok_("Daftar pemasok berhasil diambil.", listSuppliersAction_(payload, token));
       case "saveSupplier":
         return ok_("Data pemasok berhasil disimpan.", saveSupplierAction_(payload, token));
+      case "syncPull":
+        return ok_("Sinkronisasi desktop berhasil diambil.", syncPullAction_(payload, token));
       case "listSupplierPayouts":
         return ok_("Data pembayaran pemasok berhasil diambil.", listSupplierPayoutsAction_(token));
       case "settleSupplierPayout":

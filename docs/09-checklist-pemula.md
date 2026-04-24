@@ -30,9 +30,8 @@ Contoh:
 
 ## Frontend
 
-- [x] Isi `assets/js/config.js`
-- [x] Jika mau pakai API live, ubah `USE_MOCK_API` menjadi `false`
-- [x] Isi `API_BASE_URL` dengan URL Web App
+- [x] Isi `gasWebAppUrl` di config lokal Electron
+- [x] Jalankan `npm test`
 - [x] Test dulu secara lokal sebelum ke Netlify
 - [x] Test login admin
 - [ ] Test login petugas

@@ -30,6 +30,7 @@ function sanitizeTransaction_(record) {
     notes: record.notes,
     createdAt: record.created_at,
     updatedAt: record.updated_at,
+    deletedAt: record.deleted_at || "",
   };
 }
 
@@ -47,6 +48,34 @@ function ensureTransactionMutable_(record) {
   if (record && record.supplier_payout_id) {
     throw new Error("Transaksi yang sudah masuk payout pemasok tidak bisa diubah atau dihapus.");
   }
+}
+
+function buildTransactionListSummary_(items) {
+  return {
+    rowCount: items.length,
+    totalGrossSales: items.reduce(function (sum, item) {
+      return sum + toNumber_(item.grossSales, item.totalValue);
+    }, 0),
+    totalProfit: items.reduce(function (sum, item) {
+      return sum + toNumber_(item.profitAmount);
+    }, 0),
+    totalCommission: items.reduce(function (sum, item) {
+      return sum + toNumber_(item.commissionAmount);
+    }, 0),
+    totalSupplierNetAmount: items.reduce(function (sum, item) {
+      return sum + toNumber_(item.supplierNetAmount);
+    }, 0),
+    unsettledSupplierNetAmount: items
+      .filter(function (item) {
+        return !item.supplierPayoutId;
+      })
+      .reduce(function (sum, item) {
+        return sum + toNumber_(item.supplierNetAmount);
+      }, 0),
+    uniqueSupplierCount: new Set(items.map(function (item) {
+      return item.supplierName;
+    })).size,
+  };
 }
 
 function listTransactionsAction_(payload, token) {
@@ -105,10 +134,17 @@ function listTransactionsAction_(payload, token) {
     });
   }
 
-  return sortByDateDesc_(
+  var sanitizedItems = sortByDateDesc_(
     items.map(sanitizeTransaction_),
     "transactionDate"
   );
+  var paged = paginateRecords_(sanitizedItems, payload);
+
+  return {
+    items: paged.items,
+    pagination: paged.pagination,
+    summary: payload.includeSummary ? buildTransactionListSummary_(sanitizedItems) : undefined,
+  };
 }
 
 function saveTransactionAction_(payload, token) {

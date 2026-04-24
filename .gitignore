@@ -1,6 +1,7 @@
 .DS_Store
 Thumbs.db
 node_modules/
+app/node_modules/
 dist/
 build/
 coverage/
@@ -13,4 +14,3 @@ coverage/
 assets/js/config.local.js
 apps-script/.clasp.json
 apps-script/.clasprc.json
-

@@ -153,7 +153,7 @@ function listSupplierPayoutsAction_(token) {
   return {
     summary: buildSupplierPayoutSummary_(outstanding, history, todayIsoDate_()),
     outstanding: outstanding,
-    history: history.slice(0, 20),
+    history: history,
   };
 }
 

@@ -1,0 +1,10 @@
+CREATE INDEX IF NOT EXISTS idx_users_cache_status ON users_cache(status);
+CREATE INDEX IF NOT EXISTS idx_offline_auth_profiles_email ON offline_auth_profiles(email);
+CREATE INDEX IF NOT EXISTS idx_local_sessions_active ON local_sessions(session_token, revoked_at, expires_at);
+CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(supplier_name);
+CREATE INDEX IF NOT EXISTS idx_suppliers_pending ON suppliers(pending_sync, updated_at);
+CREATE INDEX IF NOT EXISTS idx_transactions_owner ON transactions(input_by_user_id, deleted_at, transaction_date);
+CREATE INDEX IF NOT EXISTS idx_transactions_pending ON transactions(pending_sync, updated_at);
+CREATE INDEX IF NOT EXISTS idx_transactions_supplier ON transactions(supplier_id, deleted_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sync_queue_entity ON sync_queue(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_sync_queue_due ON sync_queue(status, next_retry_at);
