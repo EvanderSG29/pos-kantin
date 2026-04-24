@@ -1,5 +1,8 @@
 const EventEmitter = require("node:events");
-const { buildMissingGasConfigMessage } = require("../config/default.cjs");
+const {
+  buildMissingGasConfigMessage,
+  coerceSyncIntervalMs,
+} = require("../config/default.cjs");
 
 const RETRY_STEPS_MS = [10000, 30000, 60000, 300000, 900000];
 
@@ -13,6 +16,8 @@ function createSyncService({
   syncQueueRepo,
   transactionsRepo,
   usersRepo,
+  setIntervalFn = setInterval,
+  clearIntervalFn = clearInterval,
 }) {
   const events = new EventEmitter();
   const getCursorStmt = db.prepare("SELECT cursor_value FROM sync_cursors WHERE scope = ?");
@@ -25,10 +30,15 @@ function createSyncService({
   `);
 
   let timer = null;
+  let started = false;
+  let stopNetworkSubscription = null;
   let isSyncing = false;
+  const initialSettings = readSyncSettings();
   let status = {
     online: false,
     configured: false,
+    autoSyncEnabled: initialSettings.autoSyncEnabled,
+    syncIntervalMs: initialSettings.syncIntervalMs,
     isSyncing: false,
     pendingCount: syncQueueRepo.countPending(),
     lastSyncAt: "",
@@ -37,9 +47,19 @@ function createSyncService({
     authRequired: false,
   };
 
+  function readSyncSettings() {
+    const config = getConfig();
+    return {
+      autoSyncEnabled: config.autoSyncEnabled === true,
+      syncIntervalMs: coerceSyncIntervalMs(config.syncIntervalMs),
+    };
+  }
+
   function emit(nextStatus) {
+    const syncSettings = readSyncSettings();
     status = {
       ...status,
+      ...syncSettings,
       ...nextStatus,
       pendingCount: syncQueueRepo.countPending(),
       nextRetryAt: syncQueueRepo.getNextRetryAt(),
@@ -176,11 +196,73 @@ function createSyncService({
     }
   }
 
+  function clearAutoTimer() {
+    if (!timer) return;
+    clearIntervalFn(timer);
+    timer = null;
+  }
+
+  function scheduleAutoTimer() {
+    clearAutoTimer();
+    const syncSettings = readSyncSettings();
+    emit(syncSettings);
+
+    if (!started || !syncSettings.autoSyncEnabled) return;
+
+    timer = setIntervalFn(() => {
+      void runAutomaticSync("interval");
+    }, syncSettings.syncIntervalMs);
+  }
+
+  async function runAutomaticSync(reason = "auto") {
+    const syncSettings = readSyncSettings();
+    if (!syncSettings.autoSyncEnabled) {
+      emit(syncSettings);
+      return { ...status, reason, skipped: true };
+    }
+
+    return runSync(reason);
+  }
+
+  async function applySettings({ runOnEnable = false } = {}) {
+    const wasEnabled = status.autoSyncEnabled === true;
+    const previousIntervalMs = status.syncIntervalMs;
+    const syncSettings = readSyncSettings();
+
+    emit(syncSettings);
+
+    if (
+      started
+      && (
+        !syncSettings.autoSyncEnabled
+        || !wasEnabled
+        || previousIntervalMs !== syncSettings.syncIntervalMs
+      )
+    ) {
+      scheduleAutoTimer();
+    }
+
+    if (started && runOnEnable && syncSettings.autoSyncEnabled && !wasEnabled) {
+      return runSync("auto-enabled");
+    }
+
+    return { ...status };
+  }
+
+  function stop() {
+    clearAutoTimer();
+    stopNetworkSubscription?.();
+    stopNetworkSubscription = null;
+    started = false;
+  }
+
   return {
     getStatus() {
       const network = networkService.getStatus();
+      const syncSettings = readSyncSettings();
       return {
         ...status,
+        ...syncSettings,
         online: network.online,
         configured: network.configured,
       };
@@ -192,37 +274,35 @@ function createSyncService({
     async runNow(reason = "manual") {
       return runSync(reason);
     },
+    async runAuto(reason = "auto") {
+      return runAutomaticSync(reason);
+    },
+    async applySettings(options = {}) {
+      return applySettings(options);
+    },
     start() {
-      if (timer) return;
+      if (started) return stop;
+      started = true;
 
-      const stopNetworkSubscription = networkService.onStatusChange((network) => {
+      stopNetworkSubscription = networkService.onStatusChange((network) => {
         emit({
           online: network.online,
           configured: network.configured,
         });
 
         if (network.online) {
-          void runSync("reconnect");
+          void runAutomaticSync("reconnect");
         }
       });
 
-      timer = setInterval(() => {
-        void runSync("interval");
-      }, Math.max(Number(getConfig().syncIntervalMs || 60000), 10000));
+      scheduleAutoTimer();
+      if (readSyncSettings().autoSyncEnabled) {
+        void runSync("startup");
+      }
 
-      void runSync("startup");
-
-      return () => {
-        stopNetworkSubscription();
-        clearInterval(timer);
-        timer = null;
-      };
+      return stop;
     },
-    stop() {
-      if (!timer) return;
-      clearInterval(timer);
-      timer = null;
-    },
+    stop,
   };
 }
 

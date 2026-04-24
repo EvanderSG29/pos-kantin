@@ -2,11 +2,10 @@
 
 ## Trigger sync
 
-- startup app
-- login online berhasil
-- reconnect jaringan
-- interval 60 detik
-- tombol `Sync Now`
+- tombol `Sync Now` untuk sync manual
+- startup app, login online berhasil, reconnect jaringan, dan interval berkala hanya berjalan jika `autoSyncEnabled: true`
+
+Auto sync default-nya mati. Pengaturan ini disimpan di `config.local.json` dan bisa diubah dari window Debug Monitor. Interval memakai `syncIntervalMs` dengan batas minimal 10 detik dan maksimal 24 jam.
 
 ## Queue lokal
 

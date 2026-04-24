@@ -1,6 +1,9 @@
 const { buildMissingGasConfigMessage } = require("../config/default.cjs");
 
-function createNetworkService({ getConfig, gasClient }) {
+function createNetworkService({ getConfig, gasClient, onDebugLog }) {
+  const log = onDebugLog
+    ? (level, message, details) => onDebugLog(level, `[Network] ${message}`, details)
+    : () => {};
   const listeners = new Set();
 
   let timer = null;
@@ -23,7 +26,10 @@ function createNetworkService({ getConfig, gasClient }) {
     const configured = Boolean(String(config.gasWebAppUrl || "").trim());
     const checkedAt = new Date().toISOString();
 
+    log("info", "Checking network status...", { configured, url: config.gasWebAppUrl });
+
     if (config.configError) {
+      log("error", "Config error", { error: config.configError });
       emit({
         online: false,
         configured: false,
@@ -34,6 +40,7 @@ function createNetworkService({ getConfig, gasClient }) {
     }
 
     if (!configured) {
+      log("warn", "GAS URL not configured");
       emit({
         online: false,
         configured: false,
@@ -44,7 +51,9 @@ function createNetworkService({ getConfig, gasClient }) {
     }
 
     try {
+      log("info", "Sending health check...", { url: config.gasWebAppUrl });
       await gasClient.healthCheck();
+      log("success", "Health check passed", { url: config.gasWebAppUrl });
       emit({
         online: true,
         configured: true,
@@ -52,6 +61,7 @@ function createNetworkService({ getConfig, gasClient }) {
         lastError: "",
       });
     } catch (error) {
+      log("error", "Health check failed", { error: error.message, url: config.gasWebAppUrl });
       emit({
         online: false,
         configured: true,

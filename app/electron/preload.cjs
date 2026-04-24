@@ -16,7 +16,23 @@ function invoke(channel, payload = {}) {
     });
 }
 
+let overlayToggleCallback = null;
+
+ipcRenderer.on("debug:toggle-overlay", (_event, enabled) => {
+  if (typeof overlayToggleCallback === "function") {
+    overlayToggleCallback(enabled);
+  }
+});
+
 contextBridge.exposeInMainWorld("posDesktop", {
+  debug: {
+    onToggleOverlay(callback) {
+      overlayToggleCallback = callback;
+      return () => {
+        overlayToggleCallback = null;
+      };
+    },
+  },
   app: {
     getInfo() {
       return invoke("app:get-info");

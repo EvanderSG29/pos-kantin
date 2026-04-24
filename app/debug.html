@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <title>Debug Monitor - POS Kantin</title>
+    <style>
+      :root {
+        --bg-primary: #1e1e2e;
+        --bg-secondary: #313244;
+        --bg-tertiary: #45475a;
+        --text-primary: #cdd6f4;
+        --text-secondary: #a6adc8;
+        --accent-success: #a6e3a1;
+        --accent-warning: #f9e2af;
+        --accent-error: #f38ba8;
+        --accent-info: #89b4fa;
+        --border: #45475a;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .debug-container {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
+      }
+
+      .debug-header {
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .debug-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--accent-info);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .debug-status {
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+      }
+
+      .status-badge {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-badge.online {
+        background: rgba(166, 227, 161, 0.15);
+        color: var(--accent-success);
+      }
+
+      .status-badge.offline {
+        background: rgba(243, 139, 168, 0.15);
+        color: var(--accent-error);
+      }
+
+      .status-badge.syncing {
+        background: rgba(137, 180, 250, 0.15);
+        color: var(--accent-info);
+      }
+
+      .debug-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        overflow: hidden;
+      }
+
+      .panel {
+        overflow-y: auto;
+        border-right: 1px solid var(--border);
+      }
+
+      .panel:last-child {
+        border-right: none;
+      }
+
+      .panel-header {
+        background: var(--bg-secondary);
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .panel-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .btn-sm {
+        background: var(--bg-tertiary);
+        border: none;
+        color: var(--text-primary);
+        padding: 4px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        font-family: inherit;
+      }
+
+      .btn-sm:hover {
+        background: var(--accent-info);
+        color: var(--bg-primary);
+      }
+
+      .log-entry {
+        padding: 8px 12px;
+        border-bottom: 1px solid rgba(69, 71, 90, 0.5);
+        font-size: 11px;
+      }
+
+      .log-entry:last-child {
+        border-bottom: none;
+      }
+
+      .log-timestamp {
+        color: var(--text-secondary);
+        font-size: 10px;
+        margin-bottom: 2px;
+      }
+
+      .log-level {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-right: 6px;
+      }
+
+      .log-level.info {
+        background: rgba(137, 180, 250, 0.15);
+        color: var(--accent-info);
+      }
+
+      .log-level.success {
+        background: rgba(166, 227, 161, 0.15);
+        color: var(--accent-success);
+      }
+
+      .log-level.warn {
+        background: rgba(249, 226, 175, 0.15);
+        color: var(--accent-warning);
+      }
+
+      .log-level.error {
+        background: rgba(243, 139, 168, 0.15);
+        color: var(--accent-error);
+      }
+
+      .log-message {
+        color: var(--text-primary);
+        word-break: break-word;
+      }
+
+      .log-details {
+        margin-top: 4px;
+        padding: 6px 8px;
+        background: var(--bg-primary);
+        border-radius: 4px;
+        font-size: 10px;
+        color: var(--text-secondary);
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .sync-status {
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sync-status-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 11px;
+      }
+
+      .sync-status-label {
+        color: var(--text-secondary);
+      }
+
+      .sync-status-value {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+
+      .sync-status-value.online {
+        color: var(--accent-success);
+      }
+
+      .sync-status-value.offline {
+        color: var(--accent-error);
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-secondary);
+      }
+
+      .toggle-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+      }
+
+      .sync-settings-panel {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(49, 50, 68, 0.72);
+      }
+
+      .sync-settings-row,
+      .sync-custom-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .sync-custom-controls {
+        margin-top: 8px;
+      }
+
+      .sync-settings-label {
+        color: var(--text-secondary);
+        font-size: 11px;
+      }
+
+      .sync-settings-control,
+      .sync-settings-input {
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text-primary);
+        font: inherit;
+        min-height: 28px;
+        padding: 4px 8px;
+      }
+
+      .sync-settings-control {
+        min-width: 150px;
+      }
+
+      .sync-settings-input {
+        width: 88px;
+      }
+
+      .sync-settings-error {
+        color: var(--accent-error);
+        font-size: 11px;
+        margin-top: 8px;
+        word-break: break-word;
+      }
+
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-tertiary);
+        transition: .3s;
+        border-radius: 24px;
+      }
+
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: var(--text-primary);
+        transition: .3s;
+        border-radius: 50%;
+      }
+
+      input:checked + .toggle-slider {
+        background-color: var(--accent-success);
+      }
+
+      input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+
+      .empty-state {
+        padding: 24px;
+        text-align: center;
+        color: var(--text-secondary);
+        font-style: italic;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--bg-tertiary);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="debug-container">
+      <header class="debug-header">
+        <div class="debug-title">
+          <span>🔧</span>
+          <span>Debug Monitor - POS Kantin</span>
+        </div>
+        <div class="debug-status">
+          <span id="network-badge" class="status-badge offline">Network: Offline</span>
+          <span id="sync-badge" class="status-badge offline">Sync: Idle</span>
+        </div>
+      </header>
+
+      <div class="debug-content">
+        <div class="panel">
+          <div class="panel-header">
+            <span>Network & Sync Status</span>
+            <span id="last-updated">-</span>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">🐛 Show Error Overlay on Main Window</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="overlay-toggle" onchange="toggleOverlay(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Auto Sync</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="auto-sync-toggle" onchange="toggleAutoSync(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="auto-sync-interval-panel" class="sync-settings-panel" hidden>
+            <div class="sync-settings-row">
+              <label class="sync-settings-label" for="sync-interval-select">Sync interval</label>
+              <select id="sync-interval-select" class="sync-settings-control" onchange="changeIntervalPreset(this.value)">
+                <option value="30000">30 detik</option>
+                <option value="60000">1 menit</option>
+                <option value="300000">5 menit</option>
+                <option value="900000">15 menit</option>
+                <option value="3600000">1 jam</option>
+                <option value="custom">Kustom</option>
+              </select>
+            </div>
+            <div id="sync-custom-controls" class="sync-custom-controls" hidden>
+              <input type="number" id="sync-custom-value" class="sync-settings-input" min="1" step="1" value="1">
+              <select id="sync-custom-unit" class="sync-settings-control">
+                <option value="seconds">detik</option>
+                <option value="minutes">menit</option>
+                <option value="hours">jam</option>
+              </select>
+              <button type="button" class="btn-sm" id="sync-custom-apply" onclick="applyCustomInterval()">Apply</button>
+            </div>
+            <div id="sync-settings-error" class="sync-settings-error" hidden></div>
+          </div>
+          <div id="sync-panel">
+            <div class="empty-state">Waiting for status...</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span>Activity Log</span>
+            <div class="panel-actions">
+              <button class="btn-sm" onclick="clearLogs()">Clear</button>
+              <button class="btn-sm" onclick="copyLogs()">Copy</button>
+            </div>
+          </div>
+          <div id="log-panel">
+            <div class="empty-state">No logs yet...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const logs = [];
+      const MAX_LOGS = 100;
+      const MIN_SYNC_INTERVAL_MS = 10000;
+      const MAX_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000;
+      const INTERVAL_PRESETS = [30000, 60000, 300000, 900000, 3600000];
+      const syncSettings = {
+        autoSyncEnabled: false,
+        syncIntervalMs: 60000,
+      };
+
+      function addLog(entry) {
+        logs.unshift(entry);
+        while (logs.length > MAX_LOGS) {
+          logs.pop();
+        }
+        renderLogs();
+      }
+
+      function renderLogs() {
+        const panel = document.getElementById("log-panel");
+        if (logs.length === 0) {
+          panel.innerHTML = '<div class="empty-state">No logs yet...</div>';
+          return;
+        }
+
+        panel.innerHTML = logs
+          .map(
+            (log) => `
+          <div class="log-entry">
+            <div class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</div>
+            <div>
+              <span class="log-level ${log.level}">${log.level}</span>
+              <span class="log-message">${escapeHtml(log.message)}</span>
+            </div>
+            ${log.details && Object.keys(log.details).length > 0 ? `<div class="log-details">${escapeHtml(JSON.stringify(log.details, null, 2))}</div>` : ""}
+          </div>
+        `
+          )
+          .join("");
+      }
+
+      function normalizeIntervalMs(value, fallback = syncSettings.syncIntervalMs) {
+        const numeric = Number(value);
+        const fallbackNumeric = Number(fallback);
+        const base = Number.isFinite(numeric) ? numeric : fallbackNumeric;
+        const rounded = Math.round(Number.isFinite(base) ? base : 60000);
+        return Math.min(Math.max(rounded, MIN_SYNC_INTERVAL_MS), MAX_SYNC_INTERVAL_MS);
+      }
+
+      function splitInterval(ms) {
+        const normalized = normalizeIntervalMs(ms);
+        if (normalized % 3600000 === 0) {
+          return { value: normalized / 3600000, unit: "hours" };
+        }
+
+        if (normalized % 60000 === 0) {
+          return { value: normalized / 60000, unit: "minutes" };
+        }
+
+        return { value: Math.round(normalized / 1000), unit: "seconds" };
+      }
+
+      function buildCustomIntervalMs() {
+        const valueInput = document.getElementById("sync-custom-value");
+        const unitSelect = document.getElementById("sync-custom-unit");
+        const value = Number(valueInput.value);
+        if (!Number.isFinite(value) || value <= 0) {
+          throw new Error("Durasi custom harus berupa angka lebih dari 0.");
+        }
+
+        const unit = unitSelect.value;
+        const multiplier = unit === "hours" ? 3600000 : unit === "minutes" ? 60000 : 1000;
+        const intervalMs = Math.round(value * multiplier);
+        if (intervalMs < MIN_SYNC_INTERVAL_MS) {
+          throw new Error("Interval sync otomatis minimal 10 detik.");
+        }
+
+        if (intervalMs > MAX_SYNC_INTERVAL_MS) {
+          throw new Error("Interval sync otomatis maksimal 24 jam.");
+        }
+
+        return intervalMs;
+      }
+
+      function setSyncSettingsError(message = "") {
+        const error = document.getElementById("sync-settings-error");
+        error.textContent = message;
+        error.hidden = !message;
+      }
+
+      function setSyncSettingsBusy(isBusy) {
+        [
+          "auto-sync-toggle",
+          "sync-interval-select",
+          "sync-custom-value",
+          "sync-custom-unit",
+          "sync-custom-apply",
+        ].forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) element.disabled = isBusy;
+        });
+      }
+
+      function renderSyncSettings(settings = {}) {
+        if (Object.prototype.hasOwnProperty.call(settings, "autoSyncEnabled")) {
+          syncSettings.autoSyncEnabled = settings.autoSyncEnabled === true;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(settings, "syncIntervalMs")) {
+          syncSettings.syncIntervalMs = normalizeIntervalMs(settings.syncIntervalMs);
+        }
+
+        const toggle = document.getElementById("auto-sync-toggle");
+        const intervalPanel = document.getElementById("auto-sync-interval-panel");
+        const intervalSelect = document.getElementById("sync-interval-select");
+        const customControls = document.getElementById("sync-custom-controls");
+        const customValue = document.getElementById("sync-custom-value");
+        const customUnit = document.getElementById("sync-custom-unit");
+
+        toggle.checked = syncSettings.autoSyncEnabled;
+        intervalPanel.hidden = !syncSettings.autoSyncEnabled;
+
+        const presetValue = INTERVAL_PRESETS.includes(syncSettings.syncIntervalMs)
+          ? String(syncSettings.syncIntervalMs)
+          : "custom";
+        intervalSelect.value = presetValue;
+        customControls.hidden = presetValue !== "custom";
+
+        if (presetValue === "custom") {
+          const custom = splitInterval(syncSettings.syncIntervalMs);
+          customValue.value = String(custom.value);
+          customUnit.value = custom.unit;
+        }
+      }
+
+      async function saveSyncSettings(nextSettings, logMessage) {
+        if (!window.posDebug?.setSyncSettings) {
+          setSyncSettingsError("Bridge debug tidak tersedia.");
+          return;
+        }
+
+        const previousSettings = { ...syncSettings };
+        setSyncSettingsError("");
+        setSyncSettingsBusy(true);
+
+        try {
+          const response = await window.posDebug.setSyncSettings(nextSettings);
+          const data = response?.data || {};
+          renderSyncSettings(data.syncSettings || data.sync || nextSettings);
+          if (data.sync) {
+            renderSyncStatus(data.sync);
+          }
+          addLog({
+            timestamp: new Date().toISOString(),
+            level: "info",
+            message: logMessage,
+            details: data.syncSettings || nextSettings,
+          });
+        } catch (error) {
+          renderSyncSettings(previousSettings);
+          const message = error?.message || "Gagal menyimpan pengaturan sync otomatis.";
+          setSyncSettingsError(message);
+          addLog({
+            timestamp: new Date().toISOString(),
+            level: "error",
+            message,
+          });
+        } finally {
+          setSyncSettingsBusy(false);
+        }
+      }
+
+      function toggleAutoSync(enabled) {
+        void saveSyncSettings(
+          { autoSyncEnabled: enabled },
+          `Auto sync ${enabled ? "enabled" : "disabled"}`
+        );
+      }
+
+      function changeIntervalPreset(value) {
+        setSyncSettingsError("");
+        const customControls = document.getElementById("sync-custom-controls");
+        if (value === "custom") {
+          const customValue = document.getElementById("sync-custom-value");
+          const customUnit = document.getElementById("sync-custom-unit");
+          const custom = splitInterval(syncSettings.syncIntervalMs);
+          customValue.value = String(custom.value);
+          customUnit.value = custom.unit;
+          customControls.hidden = false;
+          return;
+        }
+
+        customControls.hidden = true;
+        void saveSyncSettings(
+          { syncIntervalMs: Number(value) },
+          `Auto sync interval set to ${document.getElementById("sync-interval-select").selectedOptions[0]?.textContent || value}`
+        );
+      }
+
+      function applyCustomInterval() {
+        try {
+          const intervalMs = buildCustomIntervalMs();
+          void saveSyncSettings(
+            { syncIntervalMs: intervalMs },
+            "Custom auto sync interval saved"
+          );
+        } catch (error) {
+          setSyncSettingsError(error?.message || "Interval custom tidak valid.");
+        }
+      }
+
+      function formatInterval(ms) {
+        const normalized = normalizeIntervalMs(ms);
+        if (normalized % 3600000 === 0) return `${normalized / 3600000} jam`;
+        if (normalized % 60000 === 0) return `${normalized / 60000} menit`;
+        return `${Math.round(normalized / 1000)} detik`;
+      }
+
+      function renderSyncStatus(status) {
+        const networkBadge = document.getElementById("network-badge");
+        const syncBadge = document.getElementById("sync-badge");
+        const lastUpdated = document.getElementById("last-updated");
+
+        networkBadge.className = `status-badge ${status.online ? "online" : "offline"}`;
+        networkBadge.textContent = `Network: ${status.online ? "Online" : "Offline"}`;
+
+        if (status.isSyncing) {
+          syncBadge.className = "status-badge syncing";
+          syncBadge.textContent = "Sync: Running...";
+        } else if (status.lastError) {
+          syncBadge.className = "status-badge offline";
+          syncBadge.textContent = "Sync: Error";
+        } else {
+          syncBadge.className = status.online ? "status-badge online" : "status-badge offline";
+          syncBadge.textContent = status.online ? "Sync: Ready" : "Sync: Offline";
+        }
+
+        lastUpdated.textContent = new Date().toLocaleTimeString();
+
+        const panel = document.getElementById("sync-panel");
+        panel.innerHTML = `
+          <div class="sync-status">
+            <div class="sync-status-row">
+              <span class="sync-status-label">Configured</span>
+              <span class="sync-status-value">${status.configured ? "Yes" : "No"}</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Network Online</span>
+              <span class="sync-status-value ${status.online ? "online" : "offline"}">${status.online ? "Yes" : "No"}</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Is Syncing</span>
+              <span class="sync-status-value">${status.isSyncing ? "Yes" : "No"}</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Auto Sync</span>
+              <span class="sync-status-value ${status.autoSyncEnabled ? "online" : "offline"}">${status.autoSyncEnabled ? "Enabled" : "Disabled"}</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Auto Interval</span>
+              <span class="sync-status-value">${formatInterval(status.syncIntervalMs || syncSettings.syncIntervalMs)}</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Auth Required</span>
+              <span class="sync-status-value">${status.authRequired ? "Yes" : "No"}</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Pending Queue</span>
+              <span class="sync-status-value">${status.pendingCount ?? 0}</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Last Sync</span>
+              <span class="sync-status-value">${status.lastSyncAt ? new Date(status.lastSyncAt).toLocaleString() : "-"}</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Next Retry</span>
+              <span class="sync-status-value">${status.nextRetryAt ? new Date(status.nextRetryAt).toLocaleString() : "-"}</span>
+            </div>
+            ${status.lastError ? `
+            <div class="sync-status-row">
+              <span class="sync-status-label">Last Error</span>
+              <span class="sync-status-value offline">${escapeHtml(status.lastError)}</span>
+            </div>
+            ` : ""}
+          </div>
+        `;
+      }
+
+      function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = String(text);
+        return div.innerHTML;
+      }
+
+      function clearLogs() {
+        logs.length = 0;
+        renderLogs();
+      }
+
+      function copyLogs() {
+        const text = logs
+          .map((log) => `[${log.timestamp}] [${log.level.toUpperCase()}] ${log.message}`)
+          .join("\n");
+        navigator.clipboard.writeText(text).then(() => {
+          alert("Logs copied to clipboard!");
+        });
+      }
+
+      function toggleOverlay(enabled) {
+        window.posDebug?.toggleOverlay?.(enabled);
+        addLog({
+          timestamp: new Date().toISOString(),
+          level: "info",
+          message: `Error overlay ${enabled ? "enabled" : "disabled"} on main window`,
+        });
+      }
+
+      const STORAGE_KEY = "posDebugOverlayPanelVisible";
+      const toggleCheckbox = document.getElementById("overlay-toggle");
+      try {
+        toggleCheckbox.checked = localStorage.getItem(STORAGE_KEY) === "true";
+      } catch {}
+
+      if (typeof window.posDebug !== "undefined") {
+        window.posDebug.onSyncStatus((status) => {
+          renderSyncStatus(status);
+          const activeElement = document.activeElement;
+          const isEditingCustom = activeElement
+            && ["sync-custom-value", "sync-custom-unit"].includes(activeElement.id);
+          if (!isEditingCustom) {
+            renderSyncSettings(status);
+          }
+        });
+
+        window.posDebug.onDebugLog((entry) => {
+          addLog(entry);
+        });
+
+        window.posDebug.getInitialState().then((response) => {
+          if (response?.data) {
+            renderSyncStatus({
+              ...response.data.sync,
+              ...response.data.network,
+            });
+            renderSyncSettings(response.data.syncSettings || response.data.sync || {});
+            addLog({
+              timestamp: new Date().toISOString(),
+              level: "info",
+              message: "Debug window initialized",
+              details: response.data,
+            });
+          }
+        });
+      } else {
+        console.error("posDebug not available");
+      }
+    </script>
+  </body>
+</html>

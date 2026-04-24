@@ -101,6 +101,18 @@ function createAuthService({ db, gasClient, usersRepo, getConfig }) {
     return session;
   }
 
+  function parseSessionSnapshot(row) {
+    try {
+      return JSON.parse(row?.user_snapshot_json || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  function getStoredAuthMode(snapshot = {}) {
+    return snapshot.authMode === "offline" ? "offline" : "online";
+  }
+
   function materializeSession(row) {
     if (!row || row.revoked_at) return null;
     if (row.expires_at && new Date(row.expires_at).getTime() < Date.now()) {
@@ -111,8 +123,10 @@ function createAuthService({ db, gasClient, usersRepo, getConfig }) {
       return null;
     }
 
+    const storedSnapshot = parseSessionSnapshot(row);
+    const authMode = getStoredAuthMode(storedSnapshot);
     const cachedUser = usersRepo.getById(row.user_id);
-    const snapshot = cachedUser || JSON.parse(row.user_snapshot_json || "{}");
+    const snapshot = cachedUser || storedSnapshot;
     if (!snapshot?.id || snapshot.status !== "aktif") {
       revokeSessionStmt.run(nowIso(), nowIso(), row.session_token);
       if (readMeta(SESSION_META_KEY) === row.session_token) {
@@ -124,7 +138,10 @@ function createAuthService({ db, gasClient, usersRepo, getConfig }) {
     const nextLastSeenAt = nowIso();
     touchSessionStmt.run(
       nextLastSeenAt,
-      JSON.stringify(snapshot),
+      JSON.stringify({
+        ...snapshot,
+        authMode,
+      }),
       row.cloud_token || null,
       row.cloud_expires_at || null,
       row.session_token,
@@ -136,7 +153,7 @@ function createAuthService({ db, gasClient, usersRepo, getConfig }) {
       expiresAt: row.expires_at,
       cloudToken: row.cloud_token || "",
       cloudExpiresAt: row.cloud_expires_at || "",
-      authMode: row.cloud_token ? "online" : "offline",
+      authMode,
     };
   }
 
@@ -220,7 +237,10 @@ function createAuthService({ db, gasClient, usersRepo, getConfig }) {
 
       touchSessionStmt.run(
         nowIso(),
-        JSON.stringify(latestUser),
+        JSON.stringify({
+          ...latestUser,
+          authMode: active.authMode,
+        }),
         active.cloudToken || null,
         active.cloudExpiresAt || null,
         active.token,

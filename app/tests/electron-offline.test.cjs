@@ -5,9 +5,11 @@ const path = require("node:path");
 
 const electron = require("electron");
 const Database = require("better-sqlite3");
+const { createUsersRepo } = require("../electron/repositories/users-repo.cjs");
 const { createSuppliersRepo } = require("../electron/repositories/suppliers-repo.cjs");
 const { createTransactionsRepo } = require("../electron/repositories/transactions-repo.cjs");
 const { createSyncQueueRepo } = require("../electron/repositories/sync-queue-repo.cjs");
+const { createAuthService } = require("../electron/services/auth-service.cjs");
 
 async function createTestDb() {
   const tempDir = await mkdtemp(path.join(tmpdir(), "pos-kantin-electron-"));
@@ -25,6 +27,7 @@ async function main() {
   assert.ok(electron.app, "Test Electron harus dijalankan lewat runtime Electron, bukan mode Node.");
 
   const db = await createTestDb();
+  const usersRepo = createUsersRepo(db);
   const suppliersRepo = createSuppliersRepo(db);
   const transactionsRepo = createTransactionsRepo(db, suppliersRepo);
   const syncQueueRepo = createSyncQueueRepo(db);
@@ -118,6 +121,67 @@ async function main() {
   {
     const deleted = transactionsRepo.deleteTransaction(savedTransaction.id, petugas);
     assert.ok(deleted.deletedAt);
+  }
+
+  {
+    const cloudUser = {
+      id: "USR-OFFLINE-AUTH",
+      fullName: "Raka Offline",
+      nickname: "Raka",
+      email: "raka@example.test",
+      role: "petugas",
+      status: "aktif",
+      classGroup: "XI",
+      notes: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    let shouldFailLogin = false;
+    const authService = createAuthService({
+      db,
+      gasClient: {
+        async request(action) {
+          assert.equal(action, "login");
+          if (shouldFailLogin) {
+            throw new Error("GAS offline");
+          }
+
+          return {
+            data: {
+              user: cloudUser,
+              token: "cloud-token-reusable",
+              expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            },
+          };
+        },
+      },
+      getConfig() {
+        return { sessionTtlHours: 8 };
+      },
+      usersRepo,
+    });
+
+    const onlineSession = await authService.login({
+      email: cloudUser.email,
+      pin: "123456",
+    });
+    assert.equal(onlineSession.authMode, "online");
+    assert.equal(usersRepo.countOfflineCapableUsers(), 1);
+
+    shouldFailLogin = true;
+    const offlineSession = await authService.login({
+      email: cloudUser.email,
+      pin: "123456",
+    });
+    assert.equal(offlineSession.authMode, "offline");
+    assert.equal(offlineSession.cloudToken, "cloud-token-reusable");
+
+    const restoredOfflineSession = authService.getCurrentSession(offlineSession.token);
+    assert.equal(restoredOfflineSession.authMode, "offline");
+    assert.equal(restoredOfflineSession.cloudToken, "cloud-token-reusable");
+
+    authService.refreshActiveSessionUser();
+    assert.equal(authService.getCurrentSession(offlineSession.token).authMode, "offline");
   }
 
   db.close();
