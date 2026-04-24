@@ -22,6 +22,15 @@ function buildMissingGasConfigMessage(configOrPath = {}) {
   return `GAS Web App URL belum dikonfigurasi. Isi field gasWebAppUrl di ${configPath}.`;
 }
 
+function buildInvalidConfigMessage(configPath, error) {
+  const reason = String(error?.message || error || "Format JSON tidak valid.");
+  if (!configPath) {
+    return `Config lokal tidak valid: ${reason}`;
+  }
+
+  return `Config lokal tidak valid di ${configPath}: ${reason}`;
+}
+
 function createRuntimeConfigManager(electronApp) {
   let cachedConfig = null;
   let cachedPath = "";
@@ -50,12 +59,14 @@ function createRuntimeConfigManager(electronApp) {
         ...parsed,
         configPath,
         isConfigured: Boolean(String(parsed.gasWebAppUrl || "").trim()),
+        configError: "",
       };
     } catch (error) {
       cachedConfig = {
         ...DEFAULT_CONFIG,
         configPath,
         isConfigured: false,
+        configError: buildInvalidConfigMessage(configPath, error),
       };
     }
 
@@ -76,6 +87,7 @@ function createRuntimeConfigManager(electronApp) {
 
 module.exports = {
   DEFAULT_CONFIG,
+  buildInvalidConfigMessage,
   buildMissingGasConfigMessage,
   createRuntimeConfigManager,
 };

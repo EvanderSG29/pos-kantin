@@ -23,6 +23,16 @@ function createNetworkService({ getConfig, gasClient }) {
     const configured = Boolean(String(config.gasWebAppUrl || "").trim());
     const checkedAt = new Date().toISOString();
 
+    if (config.configError) {
+      emit({
+        online: false,
+        configured: false,
+        lastCheckedAt: checkedAt,
+        lastError: config.configError,
+      });
+      return { ...status };
+    }
+
     if (!configured) {
       emit({
         online: false,

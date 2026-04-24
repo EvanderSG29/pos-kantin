@@ -125,8 +125,16 @@ function createSyncService({
         configured: network.configured,
       });
 
+      const config = getConfig();
+      if (config.configError) {
+        emit({
+          authRequired: false,
+          lastError: config.configError,
+        });
+        return { ...status };
+      }
+
       if (!network.configured) {
-        const config = getConfig();
         emit({
           authRequired: false,
           lastError: buildMissingGasConfigMessage(config),

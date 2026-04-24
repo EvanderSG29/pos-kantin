@@ -3,6 +3,9 @@ const { buildMissingGasConfigMessage } = require("../config/default.cjs");
 function createGasClient({ getConfig }) {
   async function healthCheck() {
     const config = getConfig();
+    if (config.configError) {
+      throw new Error(config.configError);
+    }
     if (!config.gasWebAppUrl) {
       throw new Error(buildMissingGasConfigMessage(config));
     }
@@ -27,6 +30,9 @@ function createGasClient({ getConfig }) {
 
   async function request(action, payload = {}, token = "") {
     const config = getConfig();
+    if (config.configError) {
+      throw new Error(config.configError);
+    }
     if (!config.gasWebAppUrl) {
       throw new Error(buildMissingGasConfigMessage(config));
     }
