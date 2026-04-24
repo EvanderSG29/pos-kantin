@@ -33,8 +33,13 @@ Setelah itu retry tetap capped di `15m`.
 Action `syncPull` mengembalikan:
 
 - `users` non-sensitif
+- `buyers`
+- `savings`
 - `suppliers`
 - `transactions` termasuk tombstone `deletedAt`
+- `dailyFinance`
+- `changeEntries`
+- `supplierPayouts`
 - `cursors`
 
 Cursor lokal disimpan di tabel `sync_cursors`.
@@ -43,4 +48,4 @@ Cursor lokal disimpan di tabel `sync_cursors`.
 
 - `suppliers` cloud menimpa cache lokal jika row tidak punya perubahan pending.
 - `transactions` yang masih `pending_sync=1` tidak ditimpa pull cloud biasa.
-- Respons sukses dari `saveTransaction`, `deleteTransaction`, dan `saveSupplier` selalu menimpa row lokal agar bentuk akhirnya konsisten dengan GAS.
+- Respons sukses dari mutasi queue selalu menimpa row lokal terkait agar bentuk akhirnya konsisten dengan GAS.

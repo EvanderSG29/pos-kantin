@@ -55,7 +55,7 @@ function saveSupplierAction_(payload, token) {
   }
 
   var record = existing || {
-    id: generateId_("SUP"),
+    id: payload.id || generateId_("SUP"),
     created_at: now,
   };
 

@@ -8,11 +8,15 @@ const RETRY_STEPS_MS = [10000, 30000, 60000, 300000, 900000];
 
 function createSyncService({
   authService,
+  buyersRepo,
   db,
+  dailyFinanceRepo,
   gasClient,
   getConfig,
   networkService,
+  savingsRepo,
   suppliersRepo,
+  supplierPayoutsRepo,
   syncQueueRepo,
   transactionsRepo,
   usersRepo,
@@ -74,16 +78,33 @@ function createSyncService({
   }
 
   function readCursors() {
-    return {
-      users: getCursorStmt.get("users")?.cursor_value || "",
-      suppliers: getCursorStmt.get("suppliers")?.cursor_value || "",
-      transactions: getCursorStmt.get("transactions")?.cursor_value || "",
-    };
+    return [
+      "users",
+      "buyers",
+      "savings",
+      "suppliers",
+      "transactions",
+      "dailyFinance",
+      "changeEntries",
+      "supplierPayouts",
+    ].reduce((result, scope) => {
+      result[scope] = getCursorStmt.get(scope)?.cursor_value || "";
+      return result;
+    }, {});
   }
 
   function persistCursors(cursors = {}) {
     const updatedAt = new Date().toISOString();
-    ["users", "suppliers", "transactions"].forEach((scope) => {
+    [
+      "users",
+      "buyers",
+      "savings",
+      "suppliers",
+      "transactions",
+      "dailyFinance",
+      "changeEntries",
+      "supplierPayouts",
+    ].forEach((scope) => {
       if (cursors[scope] === undefined) return;
       upsertCursorStmt.run(scope, String(cursors[scope] || ""), updatedAt);
     });
@@ -93,7 +114,10 @@ function createSyncService({
     const rows = syncQueueRepo.listDue();
     for (const row of rows) {
       try {
-        if (row.entity_type === "transactions" && row.operation === "upsert") {
+        if (row.entity_type === "users" && row.operation === "upsert") {
+          const response = await gasClient.request("saveUser", row.payload, cloudToken);
+          usersRepo.applyCloudRecord(response.data, { force: true });
+        } else if (row.entity_type === "transactions" && row.operation === "upsert") {
           const response = await gasClient.request("saveTransaction", row.payload, cloudToken);
           transactionsRepo.applyCloudRecord(response.data, { force: true });
         } else if (row.entity_type === "transactions" && row.operation === "delete") {
@@ -102,6 +126,22 @@ function createSyncService({
         } else if (row.entity_type === "suppliers" && row.operation === "upsert") {
           const response = await gasClient.request("saveSupplier", row.payload, cloudToken);
           suppliersRepo.applyCloudRecord(response.data, { force: true });
+        } else if (row.entity_type === "daily_finance" && row.operation === "upsert") {
+          const response = await gasClient.request("saveDailyFinance", row.payload, cloudToken);
+          dailyFinanceRepo.applyCloudDetail(response.data);
+        } else if (row.entity_type === "daily_finance" && row.operation === "delete") {
+          const response = await gasClient.request("deleteDailyFinance", { id: row.entity_id }, cloudToken);
+          dailyFinanceRepo.applyCloudFinanceRecord(response.data, { force: true });
+        } else if (row.entity_type === "change_entries" && row.operation === "status") {
+          const response = await gasClient.request("updateChangeEntryStatus", row.payload, cloudToken);
+          dailyFinanceRepo.applyCloudChangeEntryRecord(response.data, { force: true });
+        } else if (row.entity_type === "supplier_payouts" && row.operation === "settle") {
+          const response = await gasClient.request("settleSupplierPayout", row.payload, cloudToken);
+          const payout = response.data?.payout;
+          if (payout) {
+            supplierPayoutsRepo.applyCloudRecord(payout, { force: true });
+            transactionsRepo.markTransactionsSettled(row.payload.transactionIds || [], payout.id, { pendingSync: false });
+          }
         } else {
           throw new Error(`Queue item tidak didukung: ${row.entity_type}/${row.operation}`);
         }
@@ -122,12 +162,21 @@ function createSyncService({
     }, cloudToken);
 
     usersRepo.upsertFromCloud(response.data.users || []);
+    buyersRepo.upsertFromCloud(response.data.buyers || []);
+    savingsRepo.upsertFromCloud(response.data.savings || []);
     (response.data.suppliers || []).forEach((supplier) => {
       suppliersRepo.applyCloudRecord(supplier);
     });
     (response.data.transactions || []).forEach((transaction) => {
       transactionsRepo.applyCloudRecord(transaction);
     });
+    (response.data.dailyFinance || []).forEach((finance) => {
+      dailyFinanceRepo.applyCloudFinanceRecord(finance);
+    });
+    (response.data.changeEntries || []).forEach((entry) => {
+      dailyFinanceRepo.applyCloudChangeEntryRecord(entry);
+    });
+    supplierPayoutsRepo.upsertFromCloud(response.data.supplierPayouts || []);
     persistCursors(response.data.cursors || {});
 
     authService.refreshActiveSessionUser();

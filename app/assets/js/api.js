@@ -27,6 +27,57 @@ async function request(action, payload = {}, token = "") {
       return bridge.auth.restore({ token });
     case "dashboardSummary":
       return bridge.dashboard.summary({ token });
+    case "listUsers":
+      return bridge.users.list({
+        token,
+        query: payload ?? {},
+      });
+    case "saveUser":
+      return bridge.users.save({
+        token,
+        data: payload ?? {},
+      });
+    case "listBuyers":
+      return bridge.buyers.list({
+        token,
+        query: payload ?? {},
+      });
+    case "listSavings":
+      return bridge.savings.list({
+        token,
+        query: payload ?? {},
+      });
+    case "listDailyFinance":
+      return bridge.finance.listDaily({
+        token,
+        query: payload ?? {},
+      });
+    case "getDailyFinanceDetail":
+      return bridge.finance.getDailyDetail({
+        token,
+        id: payload.id,
+      });
+    case "saveDailyFinance":
+      return bridge.finance.saveDaily({
+        token,
+        data: payload ?? {},
+      });
+    case "deleteDailyFinance":
+      return bridge.finance.deleteDaily({
+        token,
+        id: payload.id,
+      });
+    case "listChangeEntries":
+      return bridge.finance.listChangeEntries({
+        token,
+        query: payload ?? {},
+      });
+    case "updateChangeEntryStatus":
+      return bridge.finance.updateChangeEntryStatus({
+        token,
+        id: payload.id,
+        status: payload.status,
+      });
     case "listSuppliers":
       return bridge.suppliers.list({
         token,
@@ -51,6 +102,13 @@ async function request(action, payload = {}, token = "") {
       return bridge.transactions.remove({
         token,
         id: payload.id,
+      });
+    case "listSupplierPayouts":
+      return bridge.supplierPayouts.list({ token });
+    case "settleSupplierPayout":
+      return bridge.supplierPayouts.settle({
+        token,
+        data: payload ?? {},
       });
     default:
       return unsupported(action);
@@ -98,43 +156,43 @@ export const api = {
   onSyncStatusChange(listener) {
     return getBridge().sync.onStatus(listener);
   },
-  listUsers() {
-    return unsupported("listUsers");
+  listUsers(payload, token) {
+    return request("listUsers", payload ?? {}, token);
   },
-  saveUser() {
-    return unsupported("saveUser");
+  saveUser(payload, token) {
+    return request("saveUser", payload, token);
   },
-  listBuyers() {
-    return unsupported("listBuyers");
+  listBuyers(payload, token) {
+    return request("listBuyers", payload ?? {}, token);
   },
   importBuyers() {
     return unsupported("importBuyers");
   },
-  listSavings() {
-    return unsupported("listSavings");
+  listSavings(payload, token) {
+    return request("listSavings", payload ?? {}, token);
   },
-  listDailyFinance() {
-    return unsupported("listDailyFinance");
+  listDailyFinance(payload, token) {
+    return request("listDailyFinance", payload ?? {}, token);
   },
-  getDailyFinanceDetail() {
-    return unsupported("getDailyFinanceDetail");
+  getDailyFinanceDetail(id, token) {
+    return request("getDailyFinanceDetail", { id }, token);
   },
-  saveDailyFinance() {
-    return unsupported("saveDailyFinance");
+  saveDailyFinance(payload, token) {
+    return request("saveDailyFinance", payload, token);
   },
-  deleteDailyFinance() {
-    return unsupported("deleteDailyFinance");
+  deleteDailyFinance(id, token) {
+    return request("deleteDailyFinance", { id }, token);
   },
-  listChangeEntries() {
-    return unsupported("listChangeEntries");
+  listChangeEntries(payload, token) {
+    return request("listChangeEntries", payload ?? {}, token);
   },
-  updateChangeEntryStatus() {
-    return unsupported("updateChangeEntryStatus");
+  updateChangeEntryStatus(id, status, token) {
+    return request("updateChangeEntryStatus", { id, status }, token);
   },
-  listSupplierPayouts() {
-    return unsupported("listSupplierPayouts");
+  listSupplierPayouts(token) {
+    return request("listSupplierPayouts", {}, token);
   },
-  settleSupplierPayout() {
-    return unsupported("settleSupplierPayout");
+  settleSupplierPayout(payload, token) {
+    return request("settleSupplierPayout", payload, token);
   },
 };

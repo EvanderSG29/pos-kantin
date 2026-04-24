@@ -1,10 +1,14 @@
 const assert = require("node:assert/strict");
-const { mkdtemp, readFile } = require("node:fs/promises");
+const { mkdtemp, readdir, readFile } = require("node:fs/promises");
 const { tmpdir } = require("node:os");
 const path = require("node:path");
 
 const electron = require("electron");
 const Database = require("better-sqlite3");
+const { createBuyersRepo } = require("../electron/repositories/buyers-repo.cjs");
+const { createDailyFinanceRepo } = require("../electron/repositories/daily-finance-repo.cjs");
+const { createSavingsRepo } = require("../electron/repositories/savings-repo.cjs");
+const { createSupplierPayoutsRepo } = require("../electron/repositories/supplier-payouts-repo.cjs");
 const { createUsersRepo } = require("../electron/repositories/users-repo.cjs");
 const { createSuppliersRepo } = require("../electron/repositories/suppliers-repo.cjs");
 const { createTransactionsRepo } = require("../electron/repositories/transactions-repo.cjs");
@@ -15,10 +19,14 @@ async function createTestDb() {
   const tempDir = await mkdtemp(path.join(tmpdir(), "pos-kantin-electron-"));
   const db = new Database(path.join(tempDir, "test.sqlite"));
 
-  const migrationOne = await readFile(path.join(__dirname, "../electron/db/migrations/001_init.sql"), "utf8");
-  const migrationTwo = await readFile(path.join(__dirname, "../electron/db/migrations/002_indexes.sql"), "utf8");
-  db.exec(migrationOne);
-  db.exec(migrationTwo);
+  const migrationsDir = path.join(__dirname, "../electron/db/migrations");
+  const migrationFiles = (await readdir(migrationsDir))
+    .filter((file) => file.endsWith(".sql"))
+    .sort((left, right) => left.localeCompare(right));
+
+  for (const file of migrationFiles) {
+    db.exec(await readFile(path.join(migrationsDir, file), "utf8"));
+  }
 
   return db;
 }
@@ -28,8 +36,12 @@ async function main() {
 
   const db = await createTestDb();
   const usersRepo = createUsersRepo(db);
+  const buyersRepo = createBuyersRepo(db);
+  const savingsRepo = createSavingsRepo(db);
   const suppliersRepo = createSuppliersRepo(db);
   const transactionsRepo = createTransactionsRepo(db, suppliersRepo);
+  const dailyFinanceRepo = createDailyFinanceRepo(db, buyersRepo);
+  const supplierPayoutsRepo = createSupplierPayoutsRepo(db, transactionsRepo);
   const syncQueueRepo = createSyncQueueRepo(db);
 
   const admin = {
@@ -43,6 +55,21 @@ async function main() {
     fullName: "Nadia Petugas",
     role: "petugas",
   };
+
+  {
+    const localUser = usersRepo.saveUser({
+      fullName: "Ari Kasir",
+      nickname: "Ari",
+      email: "ari@example.test",
+      role: "petugas",
+      status: "aktif",
+      classGroup: "XI",
+      notes: "Tes CRUD user",
+    }, admin);
+
+    assert.equal(localUser.email, "ari@example.test");
+    assert.equal(usersRepo.list().items.some((item) => item.id === localUser.id), true);
+  }
 
   {
     const supplier = suppliersRepo.saveSupplier({
@@ -61,6 +88,7 @@ async function main() {
   }
 
   let savedTransaction = null;
+  let payoutTransaction = null;
 
   {
     const supplier = suppliersRepo.list({ includeInactive: true }).items[0];
@@ -79,14 +107,26 @@ async function main() {
     assert.equal(savedTransaction.soldQuantity, 9);
     assert.equal(savedTransaction.grossSales, 72000);
     assert.equal(savedTransaction.commissionAmount, 7200);
+
+    payoutTransaction = transactionsRepo.saveTransaction({
+      transactionDate: "2026-04-25",
+      supplierId: supplier.id,
+      itemName: "Es teh",
+      unitName: "gelas",
+      quantity: 10,
+      remainingQuantity: 0,
+      costPrice: 2000,
+      unitPrice: 3000,
+      notes: "Untuk payout",
+    }, petugas);
   }
 
   {
     const forPetugas = transactionsRepo.listTransactions({}, petugas);
     const forAdmin = transactionsRepo.listTransactions({}, admin);
 
-    assert.equal(forPetugas.items.length, 1);
-    assert.equal(forAdmin.items.length, 1);
+    assert.equal(forPetugas.items.length, 2);
+    assert.equal(forAdmin.items.length, 2);
     assert.equal(forPetugas.items[0].inputByUserId, petugas.id);
   }
 
@@ -97,6 +137,93 @@ async function main() {
     });
 
     assert.equal(skipped.skipped, true);
+  }
+
+  {
+    const buyer = buyersRepo.applyCloudRecord({
+      id: "BYR-1",
+      buyerName: "Bima",
+      classOrCategory: "XI PPLG",
+      openingBalance: 15000,
+      currentBalance: 15000,
+      status: "aktif",
+      createdAt: "2026-04-24T00:00:00.000Z",
+      updatedAt: "2026-04-24T00:00:00.000Z",
+      lastImportedAt: "2026-04-24T00:00:00.000Z",
+    });
+    savingsRepo.applyCloudRecord({
+      id: "SVG-1",
+      studentId: buyer.id,
+      studentName: buyer.buyerName,
+      className: buyer.classOrCategory,
+      gender: "",
+      groupName: "",
+      depositAmount: 15000,
+      changeBalance: 15000,
+      recordedAt: "2026-04-24",
+      recordedByUserId: admin.id,
+      recordedByName: admin.fullName,
+      notes: "IMPORT_CSV_SEED",
+      createdAt: "2026-04-24T00:00:00.000Z",
+      updatedAt: "2026-04-24T00:00:00.000Z",
+    });
+
+    assert.equal(buyersRepo.list().items.length, 1);
+    assert.equal(savingsRepo.list().items[0].studentName, "Bima");
+
+    const detail = dailyFinanceRepo.saveDailyFinance({
+      financeDate: "2026-04-24",
+      grossAmount: 20000,
+      changeTotal: 5000,
+      notes: "Shift siang",
+      changeEntries: [
+        {
+          buyerId: buyer.id,
+          changeAmount: 5000,
+          notes: "Kembalian Bima",
+        },
+      ],
+    }, petugas);
+
+    assert.equal(detail.finance.netAmount, 15000);
+    assert.equal(detail.changeEntries.length, 1);
+    assert.equal(dailyFinanceRepo.listDailyFinance({}, petugas).items.length, 1);
+
+    const changed = dailyFinanceRepo.updateChangeEntryStatus({
+      id: detail.changeEntries[0].id,
+      status: "selesai",
+    }, petugas);
+    assert.equal(changed.status, "selesai");
+    assert.throws(
+      () => dailyFinanceRepo.deleteDailyFinance({ id: detail.finance.id }, petugas),
+      /kembalian selesai/,
+    );
+
+    dailyFinanceRepo.updateChangeEntryStatus({
+      id: detail.changeEntries[0].id,
+      status: "belum",
+    }, petugas);
+    const deletedFinance = dailyFinanceRepo.deleteDailyFinance({ id: detail.finance.id }, petugas);
+    assert.ok(deletedFinance.deletedAt);
+  }
+
+  {
+    const payoutBefore = supplierPayoutsRepo.listSupplierPayouts(admin);
+    assert.equal(payoutBefore.outstanding.some((item) => item.transactionIds.includes(payoutTransaction.id)), true);
+
+    const target = payoutBefore.outstanding.find((item) => item.transactionIds.includes(payoutTransaction.id));
+    const settled = supplierPayoutsRepo.settleSupplierPayout({
+      supplierId: target.supplierId,
+      dueDate: target.dueDate,
+      notes: "Dibayar tunai",
+    }, admin);
+
+    assert.equal(settled.settledTransactionCount, 1);
+    assert.equal(supplierPayoutsRepo.listSupplierPayouts(admin).history.length, 1);
+    assert.throws(
+      () => transactionsRepo.deleteTransaction(payoutTransaction.id, petugas),
+      /payout pemasok/,
+    );
   }
 
   {

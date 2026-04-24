@@ -29,7 +29,7 @@ function saveUserAction_(payload, token) {
   }
 
   var record = existing || {
-    id: generateId_("USR"),
+    id: payload.id || generateId_("USR"),
     created_at: now,
     pin_hash: "",
   };
@@ -45,9 +45,10 @@ function saveUserAction_(payload, token) {
 
   if (payload.pin) {
     record.pin_hash = hashValue_(payload.pin);
+  } else if (payload.pinHash) {
+    record.pin_hash = String(payload.pinHash).trim();
   }
 
   saveSheetRecord_("users", withoutMeta_(record), existing ? existing._rowNumber : null);
   return sanitizeUser_(record);
 }
-

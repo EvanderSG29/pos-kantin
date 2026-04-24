@@ -11,7 +11,7 @@
 ## Komponen utama
 
 - `app/electron/db/` untuk koneksi SQLite, migrasi, dan file database di `userData`.
-- `app/electron/repositories/` untuk akses tabel `users_cache`, `suppliers`, `transactions`, dan `sync_queue`.
+- `app/electron/repositories/` untuk akses tabel cache lokal, transaksi, pemasok, simpanan, payout, dan `sync_queue`.
 - `app/electron/services/auth-service.cjs` untuk login online, login offline, dan sesi aktif lokal.
 - `app/electron/services/sync-service.cjs` untuk replay queue, pull perubahan cloud, dan status sync.
 - `app/assets/` untuk renderer HTML, CSS, JS, dan asset visual yang dipaketkan ke desktop app.
@@ -26,8 +26,7 @@
 5. Mutasi yang sama masuk ke `sync_queue`.
 6. Saat online, queue dikirim ke GAS lalu `syncPull` menarik perubahan terbaru dari Spreadsheet.
 
-## Batas v1 desktop
+## Cakupan desktop
 
-- Aktif: login, dashboard admin/petugas, transaksi, pemasok, status sync.
-- Ditahan: users, simpanan, pembayaran pemasok, laporan.
-- Halaman yang ditahan tetap punya route, tetapi renderer akan menampilkan placeholder desktop v1.
+- Aktif: login, dashboard admin/petugas, transaksi, pemasok, users, simpanan, pembayaran pemasok, laporan, dan status sync.
+- Import CSV master pembeli belum dikerjakan di desktop; data pembeli dibaca dari hasil sync cloud.

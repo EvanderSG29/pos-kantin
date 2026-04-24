@@ -2,6 +2,7 @@ const {
   calculateTransactionMetrics,
   generateId,
   getDueStatusCode,
+  getDueStatusLabel,
   normalizeCommissionBaseType,
   normalizeText,
   nowIso,
@@ -75,6 +76,7 @@ function groupOutstandingSupplierPayouts(items = [], referenceDate = todayIsoDat
         groupKey: key,
         supplierId: item.supplierId || "",
         supplierName: item.supplierName || "Tanpa pemasok",
+        supplierNameSnapshot: item.supplierName || "Tanpa pemasok",
         payoutTermDays: Math.max(Math.trunc(toNumber(item.payoutTermDays, 0)), 0),
         dueDate,
         transactionCount: 0,
@@ -82,6 +84,8 @@ function groupOutstandingSupplierPayouts(items = [], referenceDate = todayIsoDat
         totalProfit: 0,
         totalCommission: 0,
         totalSupplierNetAmount: 0,
+        periodStart: item.transactionDate || "",
+        periodEnd: item.transactionDate || "",
         transactionIds: [],
       };
 
@@ -91,6 +95,12 @@ function groupOutstandingSupplierPayouts(items = [], referenceDate = todayIsoDat
       current.totalCommission += Math.max(toNumber(item.commissionAmount, 0), 0);
       current.totalSupplierNetAmount += Math.max(toNumber(item.supplierNetAmount, 0), 0);
       current.transactionIds.push(item.id);
+      if (item.transactionDate && (!current.periodStart || String(item.transactionDate) < String(current.periodStart))) {
+        current.periodStart = item.transactionDate;
+      }
+      if (item.transactionDate && (!current.periodEnd || String(item.transactionDate) > String(current.periodEnd))) {
+        current.periodEnd = item.transactionDate;
+      }
 
       grouped.set(key, current);
     });
@@ -99,6 +109,7 @@ function groupOutstandingSupplierPayouts(items = [], referenceDate = todayIsoDat
     .map((item) => ({
       ...item,
       dueStatus: getDueStatusCode(item.dueDate, referenceDate),
+      dueStatusLabel: getDueStatusLabel(getDueStatusCode(item.dueDate, referenceDate)),
     }))
     .sort((left, right) => String(left.dueDate || "").localeCompare(String(right.dueDate || "")));
 }
@@ -147,6 +158,13 @@ function createTransactionsRepo(db, suppliersRepo) {
       deleted_at = excluded.deleted_at,
       last_synced_at = excluded.last_synced_at,
       pending_sync = excluded.pending_sync
+  `);
+  const markPayoutStmt = db.prepare(`
+    UPDATE transactions
+    SET supplier_payout_id = ?,
+        updated_at = ?,
+        pending_sync = ?
+    WHERE id = ?
   `);
 
   function assertSessionRole(sessionUser) {
@@ -406,7 +424,21 @@ function createTransactionsRepo(db, suppliersRepo) {
     getById(id) {
       return mapTransactionRow(selectById.get(String(id || "")));
     },
+    groupOutstandingSupplierPayouts(referenceDate = todayIsoDate()) {
+      const allRows = listStmt.all().map(mapTransactionRow);
+      return groupOutstandingSupplierPayouts(allRows, referenceDate);
+    },
     listTransactions,
+    markTransactionsSettled(transactionIds = [], payoutId, options = {}) {
+      const now = nowIso();
+      const pendingSync = options.pendingSync === true ? 1 : 0;
+      const tx = db.transaction((ids) => {
+        ids.forEach((id) => {
+          markPayoutStmt.run(String(payoutId || ""), now, pendingSync, String(id || ""));
+        });
+      });
+      tx(transactionIds);
+    },
     saveTransaction,
   };
 }

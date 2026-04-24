@@ -14,7 +14,12 @@ function buildLinks(role) {
 
   if (role === "admin") {
     links.push({ key: "suppliers", label: "Pemasok", href: ROUTES.suppliers, icon: "fa-truck-loading" });
+    links.push({ key: "users", label: "Users", href: ROUTES.users, icon: "fa-users-cog" });
+    links.push({ key: "supplierPayouts", label: "Pembayaran", href: ROUTES.supplierPayouts, icon: "fa-file-invoice-dollar" });
   }
+
+  links.push({ key: "savings", label: "Simpanan", href: ROUTES.savings, icon: "fa-piggy-bank" });
+  links.push({ key: "reports", label: "Laporan", href: ROUTES.reports, icon: "fa-chart-line" });
 
   return links;
 }
@@ -48,7 +53,7 @@ export function renderSidebar({ currentPage, user }) {
         <hr class="sidebar-divider my-0">
       </li>
 
-      <li class="sidebar-heading">Desktop v1</li>
+      <li class="sidebar-heading">Menu</li>
 
       ${links}
     </ul>

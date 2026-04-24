@@ -56,7 +56,7 @@ const ROUTE_MANIFEST_MAP = Object.freeze({
     href: "./users.html",
     title: "Users",
     roles: ["admin"],
-    modulePath: "./pages/desktop-unavailable.js",
+    modulePath: "./pages/users.js",
     isAppRoute: true,
   },
   suppliers: {
@@ -78,7 +78,7 @@ const ROUTE_MANIFEST_MAP = Object.freeze({
     href: "./pembayaran.html",
     title: "Pembayaran Pemasok",
     roles: ["admin"],
-    modulePath: "./pages/desktop-unavailable.js",
+    modulePath: "./pages/pembayaran.js",
     isAppRoute: true,
   },
   savings: {
@@ -89,7 +89,7 @@ const ROUTE_MANIFEST_MAP = Object.freeze({
     href: "./simpanan.html",
     title: "Simpanan",
     roles: ["petugas", "admin"],
-    modulePath: "./pages/desktop-unavailable.js",
+    modulePath: "./pages/simpanan.js",
     isAppRoute: true,
   },
   reports: {
@@ -100,7 +100,7 @@ const ROUTE_MANIFEST_MAP = Object.freeze({
     href: "./laporan.html",
     title: "Laporan",
     roles: ["petugas", "admin"],
-    modulePath: "./pages/desktop-unavailable.js",
+    modulePath: "./pages/laporan.js",
     isAppRoute: true,
   },
   notFound: {

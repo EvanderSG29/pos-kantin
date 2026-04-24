@@ -66,4 +66,4 @@
 - `saveSupplier` menerima `supplierName`, `contactName`, `contactPhone`, `commissionRate`, `commissionBaseType`, `payoutTermDays`, `notes`, dan `isActive`
 - `saveTransaction` menghitung snapshot `commission_rate`, `commission_base_type`, dan `payout_term_days` dari master pemasok saat request diproses
 - `settleSupplierPayout` menerima `supplierId`, `dueDate`, dan `notes?` lalu membuat audit row di sheet `supplier_payouts`
-- `syncPull` menerima `payload.since.{users,suppliers,transactions}` dan mengembalikan delta plus cursor terbaru untuk desktop Electron
+- `syncPull` menerima `payload.since` per scope sync desktop dan mengembalikan delta plus cursor terbaru untuk SQLite lokal Electron

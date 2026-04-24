@@ -165,6 +165,21 @@ function settleSupplierPayoutAction_(payload, token) {
     throw new Error("Supplier dan jatuh tempo payout wajib diisi.");
   }
 
+  var existingPayout = payload.id ? getRecordById_("supplier_payouts", payload.id) : null;
+  if (existingPayout) {
+    var settledIds = getSheetRecords_("transactions").filter(function (record) {
+      return String(record.supplier_payout_id) === String(existingPayout.id);
+    }).map(function (record) {
+      return record.id;
+    });
+
+    return {
+      payout: sanitizeSupplierPayout_(existingPayout),
+      settledTransactionCount: toNumber_(existingPayout.transaction_count),
+      transactionIds: settledIds,
+    };
+  }
+
   var now = nowIso_();
   var transactions = getSheetRecords_("transactions").filter(function (record) {
     return !record.deleted_at
@@ -185,7 +200,7 @@ function settleSupplierPayoutAction_(payload, token) {
   }
 
   var payoutRecord = {
-    id: generateId_("PAY"),
+    id: payload.id || generateId_("PAY"),
     supplier_id: grouped.supplierId,
     supplier_name_snapshot: grouped.supplierNameSnapshot,
     period_start: grouped.periodStart,
@@ -216,5 +231,8 @@ function settleSupplierPayoutAction_(payload, token) {
   return {
     payout: sanitizeSupplierPayout_(payoutRecord),
     settledTransactionCount: transactions.length,
+    transactionIds: transactions.map(function (record) {
+      return record.id;
+    }),
   };
 }

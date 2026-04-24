@@ -26,7 +26,7 @@ function renderSupplierSnapshot(summary) {
       </article>
     </div>
     <div class="alert alert-light border mb-0">
-      Desktop v1 hanya memindahkan modul inti. Users, simpanan, pembayaran pemasok, dan laporan tetap ditahan di luar scope rilis ini.
+      Modul desktop sekarang memakai SQLite lokal untuk transaksi, pemasok, users, simpanan, pembayaran pemasok, laporan, dan sinkronisasi Google Sheets.
     </div>
   `;
 }

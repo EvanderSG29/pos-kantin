@@ -13,6 +13,10 @@ function normalizeText(value = "") {
   return String(value).trim().toLowerCase();
 }
 
+function hashValue(value = "") {
+  return crypto.createHash("sha256").update(String(value || "")).digest("hex");
+}
+
 function generateId(prefix = "ID") {
   return `${prefix}-${Date.now()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 }
@@ -40,6 +44,21 @@ function getDueStatusCode(dueDate, referenceDate = todayIsoDate()) {
   if (String(dueDate) < String(referenceDate)) return "overdue";
   if (String(dueDate) === String(referenceDate)) return "today";
   return "upcoming";
+}
+
+function getDueStatusLabel(statusCode) {
+  switch (statusCode) {
+    case "overdue":
+      return "Terlambat";
+    case "today":
+      return "Jatuh tempo hari ini";
+    case "upcoming":
+      return "Belum jatuh tempo";
+    case "settled":
+      return "Sudah dibayar";
+    default:
+      return "Belum ada jatuh tempo";
+  }
 }
 
 function calculateTransactionMetrics(input = {}) {
@@ -115,6 +134,8 @@ module.exports = {
   calculateTransactionMetrics,
   generateId,
   getDueStatusCode,
+  getDueStatusLabel,
+  hashValue,
   normalizeCommissionBaseType,
   normalizeText,
   nowIso,

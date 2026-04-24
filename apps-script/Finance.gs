@@ -171,10 +171,6 @@ function normalizeIncomingChangeEntries_(items, existingEntries) {
     var label = "Baris kembalian " + (index + 1);
     var existing = item.id ? existingById[String(item.id)] : null;
 
-    if (item.id && !existing) {
-      throw new Error(label + " tidak ditemukan di data lama.");
-    }
-
     if (!item.buyerId) {
       throw new Error(label + " wajib memilih pembeli.");
     }
@@ -263,7 +259,7 @@ function saveDailyFinanceAction_(payload, token) {
   });
 
   var financeRecord = existingFinance || {
-    id: generateId_("FIN"),
+    id: payload.id || generateId_("FIN"),
     created_at: now,
     created_by_user_id: context.user.id,
     created_by_name: context.user.full_name,
@@ -282,7 +278,7 @@ function saveDailyFinanceAction_(payload, token) {
 
   normalizedEntries.forEach(function (entry) {
     var record = entry.existing || {
-      id: generateId_("CHG"),
+      id: entry.id || generateId_("CHG"),
       created_at: now,
       created_by_user_id: context.user.id,
       created_by_name: context.user.full_name,

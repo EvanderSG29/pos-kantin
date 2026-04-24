@@ -247,6 +247,9 @@ function createAuthService({ db, gasClient, usersRepo, getConfig }) {
       );
       return latestUser;
     },
+    seedOfflineAuthProfile(user, pin) {
+      usersRepo.seedOfflineAuthProfile(user, pin, getDeviceSecret());
+    },
     requireSession(token) {
       const session = getCurrentSession(token);
       if (!session?.user) {

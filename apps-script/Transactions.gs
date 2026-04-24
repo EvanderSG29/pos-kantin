@@ -196,7 +196,7 @@ function saveTransactionAction_(payload, token) {
   });
 
   var record = existing || {
-    id: generateId_("TRX"),
+    id: payload.id || generateId_("TRX"),
     created_at: now,
     input_by_user_id: context.user.id,
     input_by_name: context.user.full_name,

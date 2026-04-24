@@ -25,9 +25,6 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
    - `setupApplicationSpreadsheetAndSeedPin()`
 7. Jika perlu mengulang seed PIN default admin, jalankan:
    - `seedDefaultAdminPin()`
-8. Jika perlu, pakai wrapper:
-   - `.\clasp-ivan.ps1 push`
-
 ## Catatan penting
 
 - Jangan commit `.clasp.json`.

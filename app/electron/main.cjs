@@ -3,6 +3,11 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const { createRuntimeConfigManager } = require("./config/default.cjs");
 const { openDatabase } = require("./db/connection.cjs");
 const { registerAppProtocol, registerAppScheme } = require("./protocol.cjs");
+const { hashValue } = require("./common.cjs");
+const { createBuyersRepo } = require("./repositories/buyers-repo.cjs");
+const { createDailyFinanceRepo } = require("./repositories/daily-finance-repo.cjs");
+const { createSavingsRepo } = require("./repositories/savings-repo.cjs");
+const { createSupplierPayoutsRepo } = require("./repositories/supplier-payouts-repo.cjs");
 const { createUsersRepo } = require("./repositories/users-repo.cjs");
 const { createSuppliersRepo } = require("./repositories/suppliers-repo.cjs");
 const { createTransactionsRepo } = require("./repositories/transactions-repo.cjs");
@@ -69,10 +74,6 @@ function createWindow() {
   });
 
   void mainWindow.loadURL("app://bundle/login.html");
-
-  if (!app.isPackaged) {
-    setTimeout(createDebugWindow, 1000);
-  }
 }
 
 function sendSyncStatus(payload) {
@@ -102,6 +103,43 @@ function ok(message, data) {
   };
 }
 
+function requireAdmin(session) {
+  if (session.user.role !== "admin") {
+    throw new Error("Aksi ini hanya untuk admin.");
+  }
+}
+
+function buildUserSyncPayload(data, user) {
+  const payload = {
+    ...data,
+    id: user.id,
+  };
+  if (payload.pin) {
+    payload.pinHash = hashValue(payload.pin);
+  }
+  delete payload.pin;
+  return payload;
+}
+
+function buildDailyFinanceSyncPayload(detail) {
+  const finance = detail.finance;
+  return {
+    id: finance.id,
+    financeDate: finance.financeDate,
+    grossAmount: finance.grossAmount,
+    changeTotal: finance.changeTotal,
+    notes: finance.notes || "",
+    changeEntries: detail.changeEntries
+      .filter((entry) => !entry.deletedAt)
+      .map((entry) => ({
+        id: entry.id,
+        buyerId: entry.buyerId,
+        changeAmount: entry.changeAmount,
+        notes: entry.notes || "",
+      })),
+  };
+}
+
 app.whenReady().then(() => {
   registerAppProtocol(path.resolve(__dirname, ".."));
 
@@ -109,8 +147,12 @@ app.whenReady().then(() => {
   databaseHandle = openDatabase(app);
 
   const usersRepo = createUsersRepo(databaseHandle.db);
+  const buyersRepo = createBuyersRepo(databaseHandle.db);
+  const savingsRepo = createSavingsRepo(databaseHandle.db);
   const suppliersRepo = createSuppliersRepo(databaseHandle.db);
   const transactionsRepo = createTransactionsRepo(databaseHandle.db, suppliersRepo);
+  const dailyFinanceRepo = createDailyFinanceRepo(databaseHandle.db, buyersRepo);
+  const supplierPayoutsRepo = createSupplierPayoutsRepo(databaseHandle.db, transactionsRepo);
   const syncQueueRepo = createSyncQueueRepo(databaseHandle.db);
 
   const gasClient = createGasClient({
@@ -137,7 +179,11 @@ app.whenReady().then(() => {
     gasClient,
     getConfig: () => runtimeConfig.getConfig(),
     networkService,
+    buyersRepo,
+    dailyFinanceRepo,
+    savingsRepo,
     suppliersRepo,
+    supplierPayoutsRepo,
     syncQueueRepo,
     transactionsRepo,
     usersRepo,
@@ -180,6 +226,40 @@ app.whenReady().then(() => {
       lastSyncError: syncService.getStatus().lastError,
       syncOnline: syncService.getStatus().online,
     }));
+  });
+
+  ipcMain.handle("users:list", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    requireAdmin(session);
+    return ok("Daftar user berhasil diambil.", usersRepo.list(payload?.query || {}));
+  });
+
+  ipcMain.handle("users:save", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    const data = payload?.data || {};
+    const user = usersRepo.saveUser(data, session.user);
+    if (data.pin) {
+      authService.seedOfflineAuthProfile(user, data.pin);
+    }
+    syncQueueRepo.enqueueChange({
+      entityType: "users",
+      entityId: user.id,
+      operation: "upsert",
+      payload: buildUserSyncPayload(data, user),
+    });
+    sendSyncStatus(syncService.getStatus());
+    authService.refreshActiveSessionUser();
+    return ok("User berhasil disimpan.", user);
+  });
+
+  ipcMain.handle("buyers:list", (_event, payload) => {
+    authService.requireSession(payload?.token || "");
+    return ok("Daftar pembeli berhasil diambil.", buyersRepo.list(payload?.query || {}));
+  });
+
+  ipcMain.handle("savings:list", (_event, payload) => {
+    authService.requireSession(payload?.token || "");
+    return ok("Data simpanan berhasil diambil.", savingsRepo.list(payload?.query || {}));
   });
 
   ipcMain.handle("suppliers:list", (_event, payload) => {
@@ -238,6 +318,90 @@ app.whenReady().then(() => {
     });
     sendSyncStatus(syncService.getStatus());
     return ok("Transaksi berhasil dihapus.", transaction);
+  });
+
+  ipcMain.handle("finance:list-daily", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    return ok("Data keuangan harian berhasil diambil.", dailyFinanceRepo.listDailyFinance(payload?.query || {}, session.user));
+  });
+
+  ipcMain.handle("finance:get-daily-detail", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    return ok("Detail keuangan harian berhasil diambil.", dailyFinanceRepo.getDailyFinanceDetail({ id: payload?.id || "" }, session.user));
+  });
+
+  ipcMain.handle("finance:save-daily", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    const detail = dailyFinanceRepo.saveDailyFinance(payload?.data || {}, session.user);
+    syncQueueRepo.enqueueChange({
+      entityType: "daily_finance",
+      entityId: detail.finance.id,
+      operation: "upsert",
+      payload: buildDailyFinanceSyncPayload(detail),
+    });
+    sendSyncStatus(syncService.getStatus());
+    return ok("Data keuangan harian berhasil disimpan.", detail);
+  });
+
+  ipcMain.handle("finance:delete-daily", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    const finance = dailyFinanceRepo.deleteDailyFinance({ id: payload?.id || "" }, session.user);
+    syncQueueRepo.enqueueChange({
+      entityType: "daily_finance",
+      entityId: finance.id,
+      operation: "delete",
+      payload: { id: finance.id },
+    });
+    sendSyncStatus(syncService.getStatus());
+    return ok("Data keuangan harian berhasil dihapus.", finance);
+  });
+
+  ipcMain.handle("finance:list-change-entries", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    return ok("Daftar buku kembalian berhasil diambil.", dailyFinanceRepo.listChangeEntries(payload?.query || {}, session.user));
+  });
+
+  ipcMain.handle("finance:update-change-entry-status", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    const changeEntry = dailyFinanceRepo.updateChangeEntryStatus({
+      id: payload?.id || "",
+      status: payload?.status || "",
+    }, session.user);
+    syncQueueRepo.enqueueChange({
+      entityType: "change_entries",
+      entityId: changeEntry.id,
+      operation: "status",
+      payload: {
+        id: changeEntry.id,
+        status: changeEntry.status,
+      },
+    });
+    sendSyncStatus(syncService.getStatus());
+    return ok("Status kembalian berhasil diperbarui.", changeEntry);
+  });
+
+  ipcMain.handle("supplier-payouts:list", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    return ok("Data pembayaran pemasok berhasil diambil.", supplierPayoutsRepo.listSupplierPayouts(session.user));
+  });
+
+  ipcMain.handle("supplier-payouts:settle", (_event, payload) => {
+    const session = authService.requireSession(payload?.token || "");
+    const result = supplierPayoutsRepo.settleSupplierPayout(payload?.data || {}, session.user);
+    syncQueueRepo.enqueueChange({
+      entityType: "supplier_payouts",
+      entityId: result.payout.id,
+      operation: "settle",
+      payload: {
+        id: result.payout.id,
+        supplierId: result.payout.supplierId,
+        dueDate: result.payout.dueDate,
+        notes: result.payout.notes || "",
+        transactionIds: result.transactionIds,
+      },
+    });
+    sendSyncStatus(syncService.getStatus());
+    return ok("Pembayaran pemasok berhasil ditandai lunas.", result);
   });
 
   ipcMain.handle("sync:get-status", () => ok("Status sinkronisasi berhasil diambil.", syncService.getStatus()));

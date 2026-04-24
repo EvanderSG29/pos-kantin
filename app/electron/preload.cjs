@@ -54,6 +54,52 @@ contextBridge.exposeInMainWorld("posDesktop", {
       return invoke("dashboard:summary", payload);
     },
   },
+  users: {
+    list(payload) {
+      return invoke("users:list", payload);
+    },
+    save(payload) {
+      return invoke("users:save", payload);
+    },
+  },
+  buyers: {
+    list(payload) {
+      return invoke("buyers:list", payload);
+    },
+  },
+  savings: {
+    list(payload) {
+      return invoke("savings:list", payload);
+    },
+  },
+  finance: {
+    listDaily(payload) {
+      return invoke("finance:list-daily", payload);
+    },
+    getDailyDetail(payload) {
+      return invoke("finance:get-daily-detail", payload);
+    },
+    saveDaily(payload) {
+      return invoke("finance:save-daily", payload);
+    },
+    deleteDaily(payload) {
+      return invoke("finance:delete-daily", payload);
+    },
+    listChangeEntries(payload) {
+      return invoke("finance:list-change-entries", payload);
+    },
+    updateChangeEntryStatus(payload) {
+      return invoke("finance:update-change-entry-status", payload);
+    },
+  },
+  supplierPayouts: {
+    list(payload) {
+      return invoke("supplier-payouts:list", payload);
+    },
+    settle(payload) {
+      return invoke("supplier-payouts:settle", payload);
+    },
+  },
   suppliers: {
     list(payload) {
       return invoke("suppliers:list", payload);

@@ -1,5 +1,5 @@
 const crypto = require("node:crypto");
-const { normalizeText, nowIso } = require("../common.cjs");
+const { generateId, normalizeText, nowIso } = require("../common.cjs");
 
 function mapUserRow(row) {
   if (!row) return null;
@@ -21,6 +21,8 @@ function mapUserRow(row) {
 function createUsersRepo(db) {
   const selectById = db.prepare("SELECT * FROM users_cache WHERE id = ?");
   const selectByEmail = db.prepare("SELECT * FROM users_cache WHERE lower(email) = lower(?)");
+  const selectDuplicateEmail = db.prepare("SELECT * FROM users_cache WHERE lower(email) = lower(?) AND id != ?");
+  const listAllStmt = db.prepare("SELECT * FROM users_cache ORDER BY full_name COLLATE NOCASE ASC");
   const selectOfflineAuthByEmail = db.prepare(`
     SELECT p.*, u.*
     FROM offline_auth_profiles p
@@ -29,9 +31,9 @@ function createUsersRepo(db) {
   `);
   const upsertUser = db.prepare(`
     INSERT INTO users_cache (
-      id, full_name, nickname, email, role, status, class_group, notes, created_at, updated_at, last_synced_at
+      id, full_name, nickname, email, role, status, class_group, notes, created_at, updated_at, last_synced_at, pending_sync
     ) VALUES (
-      @id, @full_name, @nickname, @email, @role, @status, @class_group, @notes, @created_at, @updated_at, @last_synced_at
+      @id, @full_name, @nickname, @email, @role, @status, @class_group, @notes, @created_at, @updated_at, @last_synced_at, @pending_sync
     )
     ON CONFLICT(id) DO UPDATE SET
       full_name = excluded.full_name,
@@ -43,7 +45,8 @@ function createUsersRepo(db) {
       notes = excluded.notes,
       created_at = excluded.created_at,
       updated_at = excluded.updated_at,
-      last_synced_at = excluded.last_synced_at
+      last_synced_at = excluded.last_synced_at,
+      pending_sync = excluded.pending_sync
   `);
   const upsertOfflineAuth = db.prepare(`
     INSERT INTO offline_auth_profiles (
@@ -60,27 +63,85 @@ function createUsersRepo(db) {
   `);
   const countOfflineCapableStmt = db.prepare("SELECT COUNT(*) AS total FROM offline_auth_profiles");
 
-  function upsertFromCloud(users = []) {
+  function applyCloudRecord(user, options = {}) {
+    const existing = selectById.get(String(user.id || ""));
+    if (existing?.pending_sync && !options.force) {
+      return {
+        skipped: true,
+        user: mapUserRow(existing),
+      };
+    }
+
     const syncedAt = nowIso();
+    const record = {
+      id: user.id,
+      full_name: String(user.fullName || "").trim(),
+      nickname: String(user.nickname || "").trim(),
+      email: String(user.email || "").trim(),
+      role: user.role === "admin" ? "admin" : "petugas",
+      status: user.status === "nonaktif" ? "nonaktif" : "aktif",
+      class_group: String(user.classGroup || "").trim(),
+      notes: String(user.notes || "").trim(),
+      created_at: user.createdAt || existing?.created_at || syncedAt,
+      updated_at: user.updatedAt || syncedAt,
+      last_synced_at: syncedAt,
+      pending_sync: 0,
+    };
+
+    upsertUser.run(record);
+    return {
+      skipped: false,
+      user: mapUserRow(record),
+    };
+  }
+
+  function upsertFromCloud(users = []) {
     const tx = db.transaction((items) => {
       items.forEach((user) => {
-        upsertUser.run({
-          id: user.id,
-          full_name: String(user.fullName || "").trim(),
-          nickname: String(user.nickname || "").trim(),
-          email: String(user.email || "").trim(),
-          role: user.role === "admin" ? "admin" : "petugas",
-          status: user.status === "nonaktif" ? "nonaktif" : "aktif",
-          class_group: String(user.classGroup || "").trim(),
-          notes: String(user.notes || "").trim(),
-          created_at: user.createdAt || syncedAt,
-          updated_at: user.updatedAt || syncedAt,
-          last_synced_at: syncedAt,
-        });
+        applyCloudRecord(user);
       });
     });
 
     tx(users);
+  }
+
+  function saveUser(payload, sessionUser) {
+    if (sessionUser.role !== "admin") {
+      throw new Error("Aksi ini hanya untuk admin.");
+    }
+
+    const now = nowIso();
+    const existing = payload.id ? selectById.get(String(payload.id)) : null;
+    const fullName = String(payload.fullName || "").trim();
+    const nickname = String(payload.nickname || "").trim();
+    const email = String(payload.email || "").trim();
+
+    if (!fullName || !nickname || !email) {
+      throw new Error("Nama lengkap, nama panggilan, dan email wajib diisi.");
+    }
+
+    const duplicate = selectDuplicateEmail.get(email, String(payload.id || ""));
+    if (duplicate) {
+      throw new Error("Email user sudah dipakai.");
+    }
+
+    const record = {
+      id: existing?.id || payload.id || generateId("USR"),
+      full_name: fullName,
+      nickname,
+      email,
+      role: payload.role === "admin" ? "admin" : "petugas",
+      status: payload.status === "nonaktif" ? "nonaktif" : "aktif",
+      class_group: String(payload.classGroup || "").trim(),
+      notes: String(payload.notes || "").trim(),
+      created_at: existing?.created_at || now,
+      updated_at: now,
+      last_synced_at: existing?.last_synced_at || null,
+      pending_sync: 1,
+    };
+
+    upsertUser.run(record);
+    return mapUserRow(record);
   }
 
   function seedOfflineAuthProfile(user, pin, deviceSecret) {
@@ -112,12 +173,18 @@ function createUsersRepo(db) {
     countOfflineCapableUsers() {
       return countOfflineCapableStmt.get()?.total ?? 0;
     },
+    applyCloudRecord,
     getByEmail(email) {
       return mapUserRow(selectByEmail.get(String(email || "").trim()));
     },
     getById(id) {
       return mapUserRow(selectById.get(String(id || "")));
     },
+    list() {
+      const items = listAllStmt.all().map(mapUserRow);
+      return { items };
+    },
+    saveUser,
     seedOfflineAuthProfile,
     upsertFromCloud,
     verifyOfflinePin,

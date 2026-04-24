@@ -26,8 +26,7 @@ CLASP dipakai sebagai jembatan antara source code lokal di folder `apps-script/`
 - Jangan jalankan `clasp pull` dari script target yang masih kosong sebelum source lokal dipush.
 - Repo lokal ini adalah source of truth.
 - Gunakan `clasp push` untuk mengisi script kosong `10R4EH...` dari source repo.
-- Jika ingin lebih mudah di PowerShell, gunakan wrapper:
-  - `.\clasp-ivan.ps1 push`
+- Gunakan `clasp -u ivan push` langsung dari PowerShell
 
 ## File penting
 
@@ -38,8 +37,6 @@ CLASP dipakai sebagai jembatan antara source code lokal di folder `apps-script/`
   - template aman untuk repo, sudah memakai urutan ekstensi `.gs` lebih dulu agar tidak bentrok dengan `.js`
 - `.claspignore`:
   - file yang tidak ikut di-push ke Apps Script
-- `clasp-ivan.ps1`:
-  - wrapper PowerShell kecil agar semua command CLASP repo ini otomatis memakai profil `ivan`
 
 ## Cek akun aktif
 
