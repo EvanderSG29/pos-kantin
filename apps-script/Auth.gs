@@ -255,6 +255,25 @@ function buildOtpEmailBody_(otp) {
   ].join("\n");
 }
 
+function authorizeMailAppForProject_() {
+  var recipient = Session.getEffectiveUser().getEmail();
+  if (!recipient) {
+    throw new Error("Email akun editor tidak tersedia untuk otorisasi MailApp.");
+  }
+
+  MailApp.sendEmail({
+    to: recipient,
+    subject: "Otorisasi MailApp POS Kantin",
+    body: "Email ini dipakai untuk menyetujui scope MailApp pada project POS Kantin.",
+    name: "POS Kantin",
+  });
+
+  return {
+    authorized: true,
+    recipient: recipient,
+  };
+}
+
 function requestPasswordResetOtpAction_(payload) {
   var email = String((payload && payload.email) || "").trim();
   if (!email) {
@@ -263,7 +282,10 @@ function requestPasswordResetOtpAction_(payload) {
 
   var user = getUserByEmail_(email);
   if (!user || user.status !== "aktif") {
-    return { sent: false };
+    return {
+      sent: false,
+      reason: "user_not_active_or_not_found",
+    };
   }
 
   var latestOtp = getSheetRecords_("password_reset_otps")
@@ -280,12 +302,27 @@ function requestPasswordResetOtpAction_(payload) {
     if (ageMs >= 0 && ageMs < cooldownMs) {
       return {
         sent: false,
+        reason: "cooldown",
         cooldownSeconds: Math.ceil((cooldownMs - ageMs) / 1000),
       };
     }
   }
 
   var otp = String(Math.floor(Math.random() * 1000000)).padStart(6, "0");
+  try {
+    MailApp.sendEmail({
+      to: user.email,
+      subject: "Kode OTP Reset Password POS Kantin",
+      body: buildOtpEmailBody_(otp),
+      name: "POS Kantin",
+    });
+  } catch (error) {
+    return {
+      sent: false,
+      reason: "mail_send_failed",
+    };
+  }
+
   var now = nowIso_();
   saveSheetRecord_("password_reset_otps", {
     id: generateId_("OTP"),
@@ -299,14 +336,10 @@ function requestPasswordResetOtpAction_(payload) {
     updated_at: now,
   });
 
-  MailApp.sendEmail({
-    to: user.email,
-    subject: "Kode OTP Reset Password POS Kantin",
-    body: buildOtpEmailBody_(otp),
-    name: "POS Kantin",
-  });
-
-  return { sent: true };
+  return {
+    sent: true,
+    reason: "sent",
+  };
 }
 
 function resetPasswordWithOtpAction_(payload) {

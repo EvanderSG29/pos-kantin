@@ -113,8 +113,16 @@ function getSheetBySchema_(schemaKey) {
   }
 
   var sheet = spreadsheet.getSheetByName(schema.name);
-  if (!sheet) {
-    throw new Error("Sheet tidak ditemukan: " + schema.name);
+  var shouldNormalizeHeader = !sheet;
+  if (sheet) {
+    var currentHeaders = sheet.getRange(1, 1, 1, schema.headers.length).getValues()[0];
+    shouldNormalizeHeader = schema.headers.some(function (expectedHeader, index) {
+      return String(currentHeaders[index] || "") !== String(expectedHeader);
+    });
+  }
+
+  if (shouldNormalizeHeader) {
+    sheet = ensureSheetSchema_(spreadsheet, schema);
   }
 
   return sheet;

@@ -430,6 +430,35 @@ function createAuthService({ db, gasClient, usersRepo, getConfig }) {
     return response;
   }
 
+  async function refreshSessionAuthMode(token = "") {
+    const session = getCurrentSession(token);
+    if (!session?.user || !session.cloudToken) {
+      return session;
+    }
+
+    try {
+      const response = await gasClient.request("getCurrentUser", {}, session.cloudToken);
+      const user = response.data?.user || session.user;
+      usersRepo.upsertFromCloud([user]);
+
+      touchSessionStmt.run(
+        nowIso(),
+        JSON.stringify({
+          ...user,
+          authMode: "online",
+          savedLoginExpiresAt: session.savedLoginExpiresAt || "",
+        }),
+        session.cloudToken || null,
+        response.data?.expiresAt || session.cloudExpiresAt || null,
+        session.token,
+      );
+    } catch {
+      return getCurrentSession(token);
+    }
+
+    return getCurrentSession(token);
+  }
+
   return {
     getActiveCloudToken() {
       return getCurrentSession()?.cloudToken || "";
@@ -466,6 +495,7 @@ function createAuthService({ db, gasClient, usersRepo, getConfig }) {
     removeSavedProfile,
     requestPasswordResetOtp,
     resetPasswordWithOtp,
+    refreshSessionAuthMode,
     refreshActiveSessionUser() {
       const active = getCurrentSession();
       if (!active) return null;

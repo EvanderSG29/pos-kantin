@@ -266,6 +266,8 @@ async function main() {
     };
     let shouldFailLogin = false;
     let shouldFailSavedLogin = false;
+    let shouldFailCurrentUser = false;
+    let otpScenario = "sent";
     const gasRequests = [];
     const authService = createAuthService({
       db,
@@ -321,7 +323,50 @@ async function main() {
 
           if (action === "requestPasswordResetOtp") {
             assert.equal(payload.email, cloudUser.email);
-            return { data: { sent: true } };
+            if (otpScenario === "cooldown") {
+              return {
+                data: {
+                  sent: false,
+                  reason: "cooldown",
+                  cooldownSeconds: 42,
+                },
+              };
+            }
+            if (otpScenario === "not_found") {
+              return {
+                data: {
+                  sent: false,
+                  reason: "user_not_active_or_not_found",
+                },
+              };
+            }
+            if (otpScenario === "mail_failed") {
+              return {
+                data: {
+                  sent: false,
+                  reason: "mail_send_failed",
+                },
+              };
+            }
+            return {
+              data: {
+                sent: true,
+                reason: "sent",
+              },
+            };
+          }
+
+          if (action === "getCurrentUser") {
+            assert.equal(token, "cloud-token-from-saved");
+            if (shouldFailCurrentUser) {
+              throw new Error("GAS offline");
+            }
+            return {
+              data: {
+                user: cloudUser,
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+              },
+            };
           }
 
           if (action === "resetPasswordWithOtp") {
@@ -375,8 +420,14 @@ async function main() {
     assert.equal(restoredOfflineSession.authMode, "offline");
     assert.equal(restoredOfflineSession.cloudToken, "cloud-token-from-saved");
 
+    const refreshedOnlineSession = await authService.refreshSessionAuthMode(offlineSession.token);
+    assert.equal(refreshedOnlineSession.authMode, "online");
+    assert.equal(refreshedOnlineSession.cloudToken, "cloud-token-from-saved");
+
+    shouldFailCurrentUser = true;
     authService.refreshActiveSessionUser();
-    assert.equal(authService.getCurrentSession(offlineSession.token).authMode, "offline");
+    assert.equal(authService.getCurrentSession(offlineSession.token).authMode, "online");
+    shouldFailCurrentUser = false;
 
     cloudUser = {
       ...cloudUser,
@@ -406,7 +457,35 @@ async function main() {
       rememberDevice: true,
     });
     assert.equal(authService.listSavedProfiles().items.length, 1);
-    await authService.requestPasswordResetOtp({ email: cloudUser.email });
+    const sentOtpResponse = await authService.requestPasswordResetOtp({ email: cloudUser.email });
+    assert.deepEqual(sentOtpResponse.data, {
+      sent: true,
+      reason: "sent",
+    });
+
+    otpScenario = "cooldown";
+    const cooldownOtpResponse = await authService.requestPasswordResetOtp({ email: cloudUser.email });
+    assert.deepEqual(cooldownOtpResponse.data, {
+      sent: false,
+      reason: "cooldown",
+      cooldownSeconds: 42,
+    });
+
+    otpScenario = "not_found";
+    const missingOtpResponse = await authService.requestPasswordResetOtp({ email: cloudUser.email });
+    assert.deepEqual(missingOtpResponse.data, {
+      sent: false,
+      reason: "user_not_active_or_not_found",
+    });
+
+    otpScenario = "mail_failed";
+    const failedOtpResponse = await authService.requestPasswordResetOtp({ email: cloudUser.email });
+    assert.deepEqual(failedOtpResponse.data, {
+      sent: false,
+      reason: "mail_send_failed",
+    });
+
+    otpScenario = "sent";
     await authService.resetPasswordWithOtp({
       email: cloudUser.email,
       otp: "123456",

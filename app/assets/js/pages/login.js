@@ -156,10 +156,19 @@ async function init() {
     const finishBusy = beginGlobalBusy("Mengirim OTP...");
 
     try {
-      await api.requestPasswordResetOtp(email);
+      const response = await api.requestPasswordResetOtp(email);
+      const result = response?.data || {};
       resetConfirmForm.email.value = email;
       resetConfirmForm.hidden = false;
+      console.info("[OTP] requestPasswordResetOtp result", {
+        sent: result.sent === true,
+        reason: result.reason || "unknown",
+        cooldownSeconds: Number(result.cooldownSeconds || 0) || 0,
+      });
       showToast("Jika email terdaftar, kode OTP akan dikirim.", "success");
+      if (result.reason === "cooldown" && Number(result.cooldownSeconds || 0) > 0) {
+        showToast(`Tunggu ${result.cooldownSeconds} detik sebelum meminta kode lagi.`, "info");
+      }
     } catch (error) {
       showToast(error.message || "Gagal mengirim OTP.", "error");
     } finally {

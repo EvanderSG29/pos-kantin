@@ -103,6 +103,25 @@ function ok(message, data) {
   };
 }
 
+function maskEmail(value) {
+  const email = String(value || "").trim().toLowerCase();
+  if (!email.includes("@")) return email ? "***" : "";
+
+  const [localPart, domainPart] = email.split("@");
+  const domainSegments = String(domainPart || "").split(".");
+  const domainName = domainSegments.shift() || "";
+  const domainSuffix = domainSegments.join(".");
+
+  const maskedLocal = localPart.length <= 2
+    ? `${localPart.slice(0, 1)}*`
+    : `${localPart.slice(0, 2)}***${localPart.slice(-1)}`;
+  const maskedDomain = domainName.length <= 2
+    ? `${domainName.slice(0, 1)}*`
+    : `${domainName.slice(0, 1)}***${domainName.slice(-1)}`;
+
+  return `${maskedLocal}@${maskedDomain}${domainSuffix ? `.${domainSuffix}` : ""}`;
+}
+
 function requireAdmin(session) {
   if (session.user.role !== "admin") {
     throw new Error("Aksi ini hanya untuk admin.");
@@ -224,8 +243,15 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle("auth:request-password-reset-otp", async (_event, payload) => {
-    await authService.requestPasswordResetOtp(payload || {});
-    return ok("Jika email terdaftar, kode OTP akan dikirim.", null);
+    const response = await authService.requestPasswordResetOtp(payload || {});
+    const result = response?.data || {};
+    sendDebugLog(result?.sent ? "success" : "warn", "[Auth] Password reset OTP processed", {
+      email: maskEmail(payload?.email || ""),
+      sent: result?.sent === true,
+      reason: result?.reason || "unknown",
+      cooldownSeconds: Number(result?.cooldownSeconds || 0) || 0,
+    });
+    return ok("Jika email terdaftar, kode OTP akan dikirim.", result);
   });
 
   ipcMain.handle("auth:reset-password-with-otp", async (_event, payload) => {
@@ -233,8 +259,8 @@ app.whenReady().then(() => {
     return ok("Password berhasil diperbarui.", null);
   });
 
-  ipcMain.handle("auth:restore", (_event, payload) => {
-    const session = authService.getCurrentSession(payload?.token || "");
+  ipcMain.handle("auth:restore", async (_event, payload) => {
+    const session = await authService.refreshSessionAuthMode(payload?.token || "");
     if (!session) {
       return ok("Sesi tidak ditemukan.", null);
     }
