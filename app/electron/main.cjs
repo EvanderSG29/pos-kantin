@@ -114,9 +114,13 @@ function buildUserSyncPayload(data, user) {
     ...data,
     id: user.id,
   };
+  if (payload.password) {
+    payload.passwordHash = hashValue(payload.password);
+  }
   if (payload.pin) {
     payload.pinHash = hashValue(payload.pin);
   }
+  delete payload.password;
   delete payload.pin;
   return payload;
 }
@@ -203,6 +207,32 @@ app.whenReady().then(() => {
     return ok("Login berhasil.", session);
   });
 
+  ipcMain.handle("auth:list-saved-profiles", () => ok("Info login tersimpan berhasil diambil.", authService.listSavedProfiles()));
+
+  ipcMain.handle("auth:login-saved-profile", async (_event, payload) => {
+    const session = await authService.loginSavedProfile(payload || {});
+    void syncService.runAuto("saved-login");
+    return ok("Login tersimpan berhasil.", session);
+  });
+
+  ipcMain.handle("auth:save-current-login", async (_event, payload) => {
+    return ok("Info login perangkat berhasil disimpan.", await authService.saveCurrentLogin(payload?.token || ""));
+  });
+
+  ipcMain.handle("auth:remove-saved-profile", async (_event, payload) => {
+    return ok("Info login perangkat berhasil dihapus.", await authService.removeSavedProfile(payload || {}, payload?.token || ""));
+  });
+
+  ipcMain.handle("auth:request-password-reset-otp", async (_event, payload) => {
+    await authService.requestPasswordResetOtp(payload || {});
+    return ok("Jika email terdaftar, kode OTP akan dikirim.", null);
+  });
+
+  ipcMain.handle("auth:reset-password-with-otp", async (_event, payload) => {
+    await authService.resetPasswordWithOtp(payload || {});
+    return ok("Password berhasil diperbarui.", null);
+  });
+
   ipcMain.handle("auth:restore", (_event, payload) => {
     const session = authService.getCurrentSession(payload?.token || "");
     if (!session) {
@@ -238,8 +268,8 @@ app.whenReady().then(() => {
     const session = authService.requireSession(payload?.token || "");
     const data = payload?.data || {};
     const user = usersRepo.saveUser(data, session.user);
-    if (data.pin) {
-      authService.seedOfflineAuthProfile(user, data.pin);
+    if (data.password || data.pin) {
+      authService.seedOfflineAuthProfile(user, data.password || data.pin);
     }
     syncQueueRepo.enqueueChange({
       entityType: "users",

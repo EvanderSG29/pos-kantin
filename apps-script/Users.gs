@@ -32,6 +32,8 @@ function saveUserAction_(payload, token) {
     id: payload.id || generateId_("USR"),
     created_at: now,
     pin_hash: "",
+    password_hash: "",
+    auth_updated_at: "",
   };
 
   record.full_name = String(payload.fullName).trim();
@@ -43,12 +45,35 @@ function saveUserAction_(payload, token) {
   record.notes = String(payload.notes || "").trim();
   record.updated_at = now;
 
-  if (payload.pin) {
+  var authChanged = false;
+  if (payload.password) {
+    if (String(payload.password).length < CONFIG.PASSWORD_MIN_LENGTH) {
+      throw new Error("Password minimal " + CONFIG.PASSWORD_MIN_LENGTH + " karakter.");
+    }
+
+    record.password_hash = hashValue_(payload.password);
+    record.pin_hash = "";
+    record.auth_updated_at = now;
+    authChanged = true;
+  } else if (payload.passwordHash) {
+    record.password_hash = String(payload.passwordHash).trim();
+    record.pin_hash = "";
+    record.auth_updated_at = now;
+    authChanged = true;
+  } else if (payload.pin) {
     record.pin_hash = hashValue_(payload.pin);
+    record.auth_updated_at = now;
+    authChanged = true;
   } else if (payload.pinHash) {
     record.pin_hash = String(payload.pinHash).trim();
+    record.auth_updated_at = now;
+    authChanged = true;
   }
 
   saveSheetRecord_("users", withoutMeta_(record), existing ? existing._rowNumber : null);
+  if (authChanged) {
+    revokeUserSessions_(record.id);
+    revokeTrustedDevicesForUser_(record.id);
+  }
   return sanitizeUser_(record);
 }

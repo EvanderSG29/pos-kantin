@@ -251,7 +251,7 @@ async function main() {
   }
 
   {
-    const cloudUser = {
+    let cloudUser = {
       id: "USR-OFFLINE-AUTH",
       fullName: "Raka Offline",
       nickname: "Raka",
@@ -260,26 +260,83 @@ async function main() {
       status: "aktif",
       classGroup: "XI",
       notes: "",
+      authUpdatedAt: "2026-04-24T00:00:00.000Z",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     let shouldFailLogin = false;
+    let shouldFailSavedLogin = false;
+    const gasRequests = [];
     const authService = createAuthService({
       db,
       gasClient: {
-        async request(action) {
-          assert.equal(action, "login");
-          if (shouldFailLogin) {
-            throw new Error("GAS offline");
+        async request(action, payload, token) {
+          gasRequests.push({ action, payload, token });
+
+          if (action === "login") {
+            if (shouldFailLogin) {
+              throw new Error("GAS offline");
+            }
+
+            return {
+              data: {
+                user: cloudUser,
+                token: "cloud-token-reusable",
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+              },
+            };
           }
 
-          return {
-            data: {
-              user: cloudUser,
-              token: "cloud-token-reusable",
-              expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-            },
-          };
+          if (action === "createTrustedDevice") {
+            assert.equal(token, "cloud-token-reusable");
+            return {
+              data: {
+                user: cloudUser,
+                token: "trusted-device-token",
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              },
+            };
+          }
+
+          if (action === "loginWithTrustedDevice") {
+            assert.equal(payload.trustedDeviceToken, "trusted-device-token");
+            if (shouldFailSavedLogin) {
+              throw new Error("GAS offline");
+            }
+
+            return {
+              data: {
+                user: cloudUser,
+                token: "cloud-token-from-saved",
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                trustedDeviceExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              },
+            };
+          }
+
+          if (action === "revokeTrustedDevice") {
+            assert.equal(payload.trustedDeviceToken, "trusted-device-token");
+            return { data: null };
+          }
+
+          if (action === "requestPasswordResetOtp") {
+            assert.equal(payload.email, cloudUser.email);
+            return { data: { sent: true } };
+          }
+
+          if (action === "resetPasswordWithOtp") {
+            assert.equal(payload.email, cloudUser.email);
+            assert.equal(payload.otp, "123456");
+            assert.equal(payload.password, "password-baru");
+            cloudUser = {
+              ...cloudUser,
+              authUpdatedAt: "2026-04-25T00:00:00.000Z",
+              updatedAt: "2026-04-25T00:00:00.000Z",
+            };
+            return { data: cloudUser };
+          }
+
+          throw new Error(`Unexpected GAS action ${action}`);
         },
       },
       getConfig() {
@@ -290,25 +347,73 @@ async function main() {
 
     const onlineSession = await authService.login({
       email: cloudUser.email,
-      pin: "123456",
+      password: "password-lama",
+      rememberDevice: true,
     });
     assert.equal(onlineSession.authMode, "online");
     assert.equal(usersRepo.countOfflineCapableUsers(), 1);
+    assert.equal(authService.listSavedProfiles().items.length, 1);
+
+    const savedOnlineSession = await authService.loginSavedProfile({ userId: cloudUser.id });
+    assert.equal(savedOnlineSession.authMode, "online");
+    assert.equal(savedOnlineSession.cloudToken, "cloud-token-from-saved");
+
+    shouldFailSavedLogin = true;
+    const savedOfflineSession = await authService.loginSavedProfile({ userId: cloudUser.id });
+    assert.equal(savedOfflineSession.authMode, "offline");
+    assert.equal(savedOfflineSession.cloudToken, "cloud-token-from-saved");
 
     shouldFailLogin = true;
     const offlineSession = await authService.login({
       email: cloudUser.email,
-      pin: "123456",
+      password: "password-lama",
     });
     assert.equal(offlineSession.authMode, "offline");
-    assert.equal(offlineSession.cloudToken, "cloud-token-reusable");
+    assert.equal(offlineSession.cloudToken, "cloud-token-from-saved");
 
     const restoredOfflineSession = authService.getCurrentSession(offlineSession.token);
     assert.equal(restoredOfflineSession.authMode, "offline");
-    assert.equal(restoredOfflineSession.cloudToken, "cloud-token-reusable");
+    assert.equal(restoredOfflineSession.cloudToken, "cloud-token-from-saved");
 
     authService.refreshActiveSessionUser();
     assert.equal(authService.getCurrentSession(offlineSession.token).authMode, "offline");
+
+    cloudUser = {
+      ...cloudUser,
+      authUpdatedAt: "2026-04-26T00:00:00.000Z",
+      updatedAt: "2026-04-26T00:00:00.000Z",
+    };
+    usersRepo.applyCloudRecord(cloudUser, { force: true });
+    await assert.rejects(
+      () => authService.loginSavedProfile({ userId: cloudUser.id }),
+      /tidak berlaku/,
+    );
+
+    shouldFailLogin = false;
+    shouldFailSavedLogin = false;
+    const resavedSession = await authService.login({
+      email: cloudUser.email,
+      pin: "password-lama",
+      rememberDevice: true,
+    });
+    await authService.removeSavedProfile({ userId: cloudUser.id }, resavedSession.token);
+    assert.equal(authService.listSavedProfiles().items.length, 0);
+    assert.equal(gasRequests.some((request) => request.action === "revokeTrustedDevice"), true);
+
+    await authService.login({
+      email: cloudUser.email,
+      password: "password-lama",
+      rememberDevice: true,
+    });
+    assert.equal(authService.listSavedProfiles().items.length, 1);
+    await authService.requestPasswordResetOtp({ email: cloudUser.email });
+    await authService.resetPasswordWithOtp({
+      email: cloudUser.email,
+      otp: "123456",
+      password: "password-baru",
+    });
+    assert.equal(authService.listSavedProfiles().items.length, 0);
+    assert.equal(usersRepo.getById(cloudUser.id).authUpdatedAt, "2026-04-25T00:00:00.000Z");
   }
 
   db.close();

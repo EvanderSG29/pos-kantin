@@ -29,6 +29,8 @@ function ensureSeedUsers_() {
       status: seedUser.status || "aktif",
       class_group: seedUser.classGroup || "",
       pin_hash: "",
+      password_hash: "",
+      auth_updated_at: "",
       notes: seedUser.notes || "Admin seed awal.",
       created_at: now,
       updated_at: now,
@@ -118,7 +120,30 @@ function setUserPinByEmail(email, pin) {
   }
 
   user.pin_hash = hashValue_(pin);
-  user.updated_at = nowIso_();
+  user.auth_updated_at = nowIso_();
+  user.updated_at = user.auth_updated_at;
+  saveSheetRecord_("users", withoutMeta_(user), user._rowNumber);
+
+  return sanitizeUser_(user);
+}
+
+function setUserPasswordByEmail(email, password) {
+  if (!email || !password) {
+    throw new Error("Email dan password wajib diisi.");
+  }
+
+  if (String(password).length < CONFIG.PASSWORD_MIN_LENGTH) {
+    throw new Error("Password minimal " + CONFIG.PASSWORD_MIN_LENGTH + " karakter.");
+  }
+
+  var user = getUserByEmail_(email);
+  if (!user) {
+    throw new Error("User tidak ditemukan.");
+  }
+
+  user.password_hash = hashValue_(password);
+  user.auth_updated_at = nowIso_();
+  user.updated_at = user.auth_updated_at;
   saveSheetRecord_("users", withoutMeta_(user), user._rowNumber);
 
   return sanitizeUser_(user);
@@ -131,6 +156,16 @@ function setSeedAdminPin(pin) {
 
   return CONFIG.SEED_ADMIN_USERS.map(function (seedUser) {
     return setUserPinByEmail(seedUser.email, pin);
+  });
+}
+
+function setSeedAdminPassword(password) {
+  if (!password) {
+    throw new Error("Password wajib diisi.");
+  }
+
+  return CONFIG.SEED_ADMIN_USERS.map(function (seedUser) {
+    return setUserPasswordByEmail(seedUser.email, password);
   });
 }
 
@@ -148,4 +183,20 @@ function setupApplicationSpreadsheetAndSeedPin() {
 
 function seedDefaultAdminPin() {
   return setSeedAdminPin("290729");
+}
+
+function setupApplicationSpreadsheetAndSeedPassword() {
+  var setupResult = setupApplicationSpreadsheet();
+  var seededUsers = setSeedAdminPassword("password290729");
+
+  return {
+    spreadsheetId: setupResult.spreadsheetId,
+    spreadsheetUrl: setupResult.spreadsheetUrl,
+    seedAdminEmails: setupResult.seedAdminEmails,
+    seededUsers: seededUsers,
+  };
+}
+
+function seedDefaultAdminPassword() {
+  return setSeedAdminPassword("password290729");
 }

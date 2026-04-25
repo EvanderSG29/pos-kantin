@@ -79,6 +79,11 @@ export async function initPage({ session, setPageBusy, signal }) {
       hasError = true;
     }
 
+    if (values.password && String(values.password).length < 8) {
+      setFieldError(form, "password", "Password minimal 8 karakter.");
+      hasError = true;
+    }
+
     return !hasError;
   }
 
@@ -254,7 +259,7 @@ export async function initPage({ session, setPageBusy, signal }) {
         role: user.role,
         status: user.status,
         notes: user.notes,
-        pin: "",
+        password: "",
       });
       clearFormErrors(form);
       setEditMode();

@@ -26,8 +26,16 @@
               </header>
 
               <div class="alert alert-light small pos-auth-note" role="alert">
-                Login online pertama akan menyiapkan profil offline di perangkat ini. Jika koneksi putus setelah itu, user yang sudah pernah login tetap bisa masuk secara lokal.
+                Login online pertama akan menyiapkan profil offline di perangkat ini. User bisa memilih apakah info login cepat disimpan di perangkat ini selama 30 hari.
               </div>
+
+              <section id="saved-login-section" class="pos-saved-login" hidden>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 text-gray-800 mb-0">Masuk cepat</h2>
+                  <span class="small text-gray-500">Perangkat ini</span>
+                </div>
+                <div id="saved-login-list" class="pos-saved-login-list"></div>
+              </section>
 
               <form id="login-form" class="user pos-auth-form">
                 <div class="form-group">
@@ -35,13 +43,59 @@
                 </div>
 
                 <div class="form-group">
-                  <input id="pin" name="pin" type="password" inputmode="numeric" class="form-control form-control-user" placeholder="Masukkan PIN" required>
+                  <input id="password" name="password" type="password" class="form-control form-control-user" placeholder="Masukkan password" required>
+                </div>
+
+                <div class="custom-control custom-checkbox text-left">
+                  <input id="rememberDevice" name="rememberDevice" type="checkbox" class="custom-control-input">
+                  <label class="custom-control-label small text-gray-700" for="rememberDevice">Simpan info login di perangkat ini</label>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-user btn-block shadow-sm">
                   <i class="fas fa-lock mr-2"></i>Masuk
                 </button>
+
+                <button id="show-reset-form" type="button" class="btn btn-link btn-sm px-0 align-self-center">Lupa password?</button>
               </form>
+
+              <section id="password-reset-panel" class="pos-password-reset" hidden>
+                <form id="password-reset-request-form" class="pos-auth-form">
+                  <div>
+                    <h2 class="h5 text-gray-900 mb-1">Reset password</h2>
+                    <p class="small text-gray-600 mb-0">Masukkan email akun yang sudah terdaftar untuk menerima kode OTP.</p>
+                  </div>
+
+                  <div class="form-group">
+                    <input id="resetEmail" name="email" type="email" class="form-control form-control-user" placeholder="nama@email.com" required>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary btn-user btn-block shadow-sm">
+                    <i class="fas fa-paper-plane mr-2"></i>Kirim OTP
+                  </button>
+                </form>
+
+                <form id="password-reset-confirm-form" class="pos-auth-form mt-3" hidden>
+                  <input type="hidden" name="email">
+
+                  <div class="form-group">
+                    <input id="resetOtp" name="otp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" class="form-control form-control-user" placeholder="Kode OTP 6 digit" required>
+                  </div>
+
+                  <div class="form-group">
+                    <input id="resetPassword" name="password" type="password" minlength="8" class="form-control form-control-user" placeholder="Password baru minimal 8 karakter" required>
+                  </div>
+
+                  <div class="form-group">
+                    <input id="resetPasswordConfirm" name="passwordConfirm" type="password" minlength="8" class="form-control form-control-user" placeholder="Ulangi password baru" required>
+                  </div>
+
+                  <button type="submit" class="btn btn-success btn-user btn-block shadow-sm">
+                    <i class="fas fa-check mr-2"></i>Ubah password
+                  </button>
+                </form>
+
+                <button id="back-to-login" type="button" class="btn btn-link btn-sm px-0 mt-2">Kembali ke login</button>
+              </section>
 
               <hr class="my-0">
 

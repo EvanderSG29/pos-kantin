@@ -27,6 +27,11 @@
 ## Action v1
 
 - `login`
+- `createTrustedDevice`
+- `loginWithTrustedDevice`
+- `revokeTrustedDevice`
+- `requestPasswordResetOtp`
+- `resetPasswordWithOtp`
 - `logout`
 - `getCurrentUser`
 - `listUsers`
@@ -52,10 +57,13 @@
 
 ## Catatan auth
 
-- Login memakai email + PIN
-- PIN disimpan sebagai `pin_hash`
-- Session disimpan di sheet `sessions`
-- Frontend menyimpan token di `localStorage`
+- Login baru memakai email + password minimal 8 karakter
+- `login` menerima `payload.email`, `payload.password`, dan opsional `payload.rememberDevice`
+- `payload.pin` masih diterima sementara untuk akun lama yang belum punya `password_hash`
+- Password disimpan sebagai `password_hash`; PIN lama tetap di `pin_hash` sampai akun dimigrasikan
+- Session cloud disimpan di sheet `sessions`
+- Saved login perangkat disimpan sebagai token hash di sheet `trusted_devices`, berlaku 30 hari, dan token mentah hanya disimpan terenkripsi di SQLite lokal Electron
+- OTP reset password dikirim lewat `MailApp.sendEmail` dari akun deployer Apps Script, bukan SMTP atau sandi aplikasi Gmail
 
 ## Catatan payload baru
 
@@ -67,3 +75,6 @@
 - `saveTransaction` menghitung snapshot `commission_rate`, `commission_base_type`, dan `payout_term_days` dari master pemasok saat request diproses
 - `settleSupplierPayout` menerima `supplierId`, `dueDate`, dan `notes?` lalu membuat audit row di sheet `supplier_payouts`
 - `syncPull` menerima `payload.since` per scope sync desktop dan mengembalikan delta plus cursor terbaru untuk SQLite lokal Electron
+- `saveUser` menerima `password?`; sync lokal boleh mengirim `passwordHash?` agar password mentah tidak masuk queue lokal
+- `requestPasswordResetOtp` menerima `email`; response tetap generik
+- `resetPasswordWithOtp` menerima `email`, `otp`, dan `password`

@@ -28,21 +28,22 @@ Setelah source berhasil dipush:
 
 1. Buka editor Apps Script milik Ivan
 2. Jalankan fungsi tanpa parameter:
-   - `setupApplicationSpreadsheetAndSeedPin()`
+   - `setupApplicationSpreadsheetAndSeedPassword()`
 3. Catat `spreadsheetUrl` yang dikembalikan
-4. Jika nanti ingin mengulang seed PIN admin default, jalankan:
-   - `seedDefaultAdminPin()`
+4. Jika nanti ingin mengulang seed password admin default, jalankan:
+   - `seedDefaultAdminPassword()`
 5. Share Apps Script project dan spreadsheet ke Evander sebagai `Editor` jika Evander perlu akses browser
 
 Jika ingin set manual satu per satu, boleh juga:
 
-- `setUserPinByEmail("ivanmarigib@gmail.com", "290729")`
-- `setUserPinByEmail("smidgidionevander@gmail.com", "290729")`
+- `setUserPasswordByEmail("ivanmarigib@gmail.com", "password290729")`
+- `setUserPasswordByEmail("smidgidionevander@gmail.com", "password290729")`
 
 Catatan:
 
 - Di editor Apps Script, tombol `Run` paling aman untuk fungsi yang **tanpa parameter**.
-- Karena itu repo ini sekarang menyediakan wrapper `setupApplicationSpreadsheetAndSeedPin()` dan `seedDefaultAdminPin()`.
+- Karena itu repo ini menyediakan wrapper `setupApplicationSpreadsheetAndSeedPassword()` dan `seedDefaultAdminPassword()`.
+- Wrapper PIN lama tetap ada hanya untuk migrasi akun lama.
 
 ## Health check
 
@@ -80,3 +81,5 @@ Untuk testing development, Anda juga bisa memakai `Deploy > Test deployments` ya
 - Script owner dan spreadsheet owner sengaja sama-sama Ivan agar izin backend dan database tidak bercampur akun
 - Frontend repo ini mengirim body POST sebagai `text/plain` agar browser tidak mengirim preflight `OPTIONS` ke Apps Script web app
 - Jika browser menampilkan `Failed to fetch` padahal URL `/exec?action=health` terbuka, biasanya penyebabnya adalah request lama masih memakai `Content-Type: application/json` atau bundle frontend belum ter-refresh
+- Fitur OTP reset password memakai `MailApp.sendEmail`, jadi saat push pertama setelah update auth Anda perlu menyetujui scope kirim email dari akun Ivan.
+- Jangan commit sandi aplikasi Gmail atau kredensial SMTP; pengiriman OTP berjalan dari akun Apps Script deployer.

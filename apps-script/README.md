@@ -6,7 +6,7 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 
 - `Code.gs` routing `doGet` dan `doPost`
 - `Config.gs` konstanta app, schema sheet, dan property key
-- `Setup.gs` helper setup spreadsheet baru dan set PIN awal
+- `Setup.gs` helper setup spreadsheet baru dan set password awal
 - `DesktopSync.gs` delta pull untuk desktop Electron
 - `Auth.gs` login, logout, validasi session
 - `Users.gs`, `Buyers.gs`, `Transactions.gs`, `Savings.gs`, `Finance.gs`, `Suppliers.gs`, `Dashboard.gs`
@@ -22,9 +22,9 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 5. Jalankan:
    - `clasp -u ivan push`
 6. Di editor Apps Script milik Ivan, jalankan:
-   - `setupApplicationSpreadsheetAndSeedPin()`
-7. Jika perlu mengulang seed PIN default admin, jalankan:
-   - `seedDefaultAdminPin()`
+   - `setupApplicationSpreadsheetAndSeedPassword()`
+7. Jika perlu mengulang seed password default admin, jalankan:
+   - `seedDefaultAdminPassword()`
 ## Catatan penting
 
 - Jangan commit `.clasp.json`.
@@ -33,5 +33,7 @@ Folder ini berisi source backend Google Apps Script untuk API POS Kantin.
 - Semua action aplikasi masuk lewat `doPost`.
 - Import CSV pembeli dijalankan dari frontend admin dan diteruskan ke action `importBuyers`.
 - GitHub tetap memakai akun Evander, tetapi Apps Script dan spreadsheet resmi dikelola oleh akun Ivan.
-- Seed awal membuat dua admin terpisah, satu Ivan dan satu Evander. PIN tidak disimpan mentah di `pin_hash`.
+- Seed awal membuat dua admin terpisah, satu Ivan dan satu Evander. Password tidak disimpan mentah di `password_hash`.
+- PIN lama masih didukung sementara lewat `pin_hash` untuk migrasi.
+- OTP reset password dikirim lewat `MailApp.sendEmail` dari akun deployer Apps Script.
 - Untuk tombol `Run` di editor Apps Script, gunakan wrapper tanpa parameter agar tidak perlu mengedit source.

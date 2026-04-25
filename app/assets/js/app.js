@@ -1,4 +1,5 @@
 import { logoutUser, restoreSession } from "./auth.js";
+import { api } from "./api.js";
 import { renderNavbar } from "./components/navbar.js";
 import { renderSidebar } from "./components/sidebar.js";
 import { mountTopbarSyncStatus } from "./components/sync-status.js";
@@ -324,6 +325,24 @@ function bindChromeEvents() {
   });
 
   document.addEventListener("click", (event) => {
+    const saveLoginButton = event.target.closest("#save-login-button");
+    if (!saveLoginButton) return;
+
+    event.preventDefault();
+    closeUserMenu();
+    void handleSaveCurrentLogin();
+  });
+
+  document.addEventListener("click", (event) => {
+    const removeSavedLoginButton = event.target.closest("#remove-saved-login-button");
+    if (!removeSavedLoginButton) return;
+
+    event.preventDefault();
+    closeUserMenu();
+    void handleRemoveSavedLogin();
+  });
+
+  document.addEventListener("click", (event) => {
     const scrollButton = event.target.closest("#scroll-to-top");
     if (!scrollButton) return;
 
@@ -350,6 +369,52 @@ async function handleLogout() {
   }
 }
 
+async function syncSavedLoginMenuState(session = shellState.session) {
+  const saveButton = document.querySelector("#save-login-button");
+  const removeButton = document.querySelector("#remove-saved-login-button");
+  if (!saveButton || !removeButton || !session?.user) return;
+
+  try {
+    const response = await api.listSavedProfiles();
+    const hasSavedProfile = (response.data.items || []).some((profile) => profile.userId === session.user.id);
+    saveButton.hidden = hasSavedProfile;
+    removeButton.hidden = !hasSavedProfile;
+  } catch {
+    saveButton.hidden = false;
+    removeButton.hidden = true;
+  }
+}
+
+async function handleSaveCurrentLogin() {
+  if (!shellState.session?.user) return;
+  const finishBusy = beginGlobalBusy("Menyimpan info login...");
+
+  try {
+    await api.saveCurrentLogin(shellState.session.token);
+    await syncSavedLoginMenuState();
+    showToast("Info login perangkat berhasil disimpan.", "success");
+  } catch (error) {
+    showToast(error.message || "Gagal menyimpan info login.", "error");
+  } finally {
+    finishBusy();
+  }
+}
+
+async function handleRemoveSavedLogin() {
+  if (!shellState.session?.user) return;
+  const finishBusy = beginGlobalBusy("Menghapus info login...");
+
+  try {
+    await api.removeSavedProfile(shellState.session.user.id, shellState.session.token);
+    await syncSavedLoginMenuState();
+    showToast("Info login perangkat berhasil dihapus.", "success");
+  } catch (error) {
+    showToast(error.message || "Gagal menghapus info login.", "error");
+  } finally {
+    finishBusy();
+  }
+}
+
 function renderShellChrome(session, route) {
   const sidebar = document.querySelector("#app-sidebar");
   const topbar = document.querySelector("#app-topbar");
@@ -367,6 +432,7 @@ function renderShellChrome(session, route) {
   }
 
   bindChromeEvents();
+  void syncSavedLoginMenuState(session);
   syncShellLayout();
   updateScrollButton();
 }

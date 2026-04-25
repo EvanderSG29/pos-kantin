@@ -49,6 +49,15 @@ export function renderNavbar({ title, session }) {
               <div class="font-weight-bold text-gray-800">${escapeHtml(user.nickname || user.fullName)}</div>
             </div>
             <div class="dropdown-divider"></div>
+            <button type="button" id="save-login-button" class="dropdown-item">
+              <i class="fas fa-shield-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+              Simpan info login perangkat ini
+            </button>
+            <button type="button" id="remove-saved-login-button" class="dropdown-item" hidden>
+              <i class="fas fa-user-times fa-sm fa-fw mr-2 text-gray-400"></i>
+              Hapus info login perangkat ini
+            </button>
+            <div class="dropdown-divider"></div>
             <button type="button" id="logout-button" class="dropdown-item">
               <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
               Keluar

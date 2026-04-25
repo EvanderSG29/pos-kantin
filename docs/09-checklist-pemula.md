@@ -24,8 +24,8 @@ Contoh:
 - [x] Pastikan `.clasp.json` menunjuk script `10R4EH...`
 - [x] Jangan `clasp pull` dari script target kosong
 - [x] Jalankan `clasp -u ivan push`
-- [x] Jalankan `setupApplicationSpreadsheetAndSeedPin()`
-- [x] Jika perlu reset PIN seed, jalankan `seedDefaultAdminPin()`
+- [x] Jalankan `setupApplicationSpreadsheetAndSeedPassword()`
+- [x] Jika perlu reset password seed, jalankan `seedDefaultAdminPassword()`
 - [x] Share script dan spreadsheet ke Evander bila perlu
 
 ## Frontend

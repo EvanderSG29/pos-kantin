@@ -42,6 +42,24 @@ contextBridge.exposeInMainWorld("posDesktop", {
     login(payload) {
       return invoke("auth:login", payload);
     },
+    listSavedProfiles() {
+      return invoke("auth:list-saved-profiles");
+    },
+    loginSavedProfile(payload) {
+      return invoke("auth:login-saved-profile", payload);
+    },
+    saveCurrentLogin(payload) {
+      return invoke("auth:save-current-login", payload);
+    },
+    removeSavedProfile(payload) {
+      return invoke("auth:remove-saved-profile", payload);
+    },
+    requestPasswordResetOtp(payload) {
+      return invoke("auth:request-password-reset-otp", payload);
+    },
+    resetPasswordWithOtp(payload) {
+      return invoke("auth:reset-password-with-otp", payload);
+    },
     logout(payload) {
       return invoke("auth:logout", payload);
     },

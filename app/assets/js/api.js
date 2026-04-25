@@ -19,7 +19,32 @@ async function request(action, payload = {}, token = "") {
     case "login":
       return bridge.auth.login({
         email: payload.email,
+        password: payload.password,
         pin: payload.pin,
+        rememberDevice: payload.rememberDevice,
+      });
+    case "listSavedProfiles":
+      return bridge.auth.listSavedProfiles();
+    case "loginSavedProfile":
+      return bridge.auth.loginSavedProfile({
+        userId: payload.userId,
+      });
+    case "saveCurrentLogin":
+      return bridge.auth.saveCurrentLogin({ token });
+    case "removeSavedProfile":
+      return bridge.auth.removeSavedProfile({
+        token,
+        userId: payload.userId,
+      });
+    case "requestPasswordResetOtp":
+      return bridge.auth.requestPasswordResetOtp({
+        email: payload.email,
+      });
+    case "resetPasswordWithOtp":
+      return bridge.auth.resetPasswordWithOtp({
+        email: payload.email,
+        otp: payload.otp,
+        password: payload.password,
       });
     case "logout":
       return bridge.auth.logout({ token });
@@ -120,8 +145,29 @@ export const api = {
   health() {
     return request("health");
   },
-  login(email, pin) {
+  login(email, password, rememberDevice = false) {
+    return request("login", { email, password, rememberDevice });
+  },
+  loginWithPin(email, pin) {
     return request("login", { email, pin });
+  },
+  listSavedProfiles() {
+    return request("listSavedProfiles");
+  },
+  loginSavedProfile(userId) {
+    return request("loginSavedProfile", { userId });
+  },
+  saveCurrentLogin(token) {
+    return request("saveCurrentLogin", {}, token);
+  },
+  removeSavedProfile(userId, token = "") {
+    return request("removeSavedProfile", { userId }, token);
+  },
+  requestPasswordResetOtp(email) {
+    return request("requestPasswordResetOtp", { email });
+  },
+  resetPasswordWithOtp(payload) {
+    return request("resetPasswordWithOtp", payload ?? {});
   },
   logout(token) {
     return request("logout", {}, token);

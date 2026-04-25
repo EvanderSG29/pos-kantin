@@ -13,6 +13,7 @@ function mapUserRow(row) {
     status: row.status,
     classGroup: row.class_group,
     notes: row.notes,
+    authUpdatedAt: row.auth_updated_at || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -24,16 +25,20 @@ function createUsersRepo(db) {
   const selectDuplicateEmail = db.prepare("SELECT * FROM users_cache WHERE lower(email) = lower(?) AND id != ?");
   const listAllStmt = db.prepare("SELECT * FROM users_cache ORDER BY full_name COLLATE NOCASE ASC");
   const selectOfflineAuthByEmail = db.prepare(`
-    SELECT p.*, u.*
+    SELECT
+      u.*,
+      p.salt AS offline_auth_salt,
+      p.verifier AS offline_auth_verifier,
+      p.auth_updated_at AS offline_auth_updated_at
     FROM offline_auth_profiles p
     JOIN users_cache u ON u.id = p.user_id
     WHERE lower(p.email) = lower(?)
   `);
   const upsertUser = db.prepare(`
     INSERT INTO users_cache (
-      id, full_name, nickname, email, role, status, class_group, notes, created_at, updated_at, last_synced_at, pending_sync
+      id, full_name, nickname, email, role, status, class_group, notes, auth_updated_at, created_at, updated_at, last_synced_at, pending_sync
     ) VALUES (
-      @id, @full_name, @nickname, @email, @role, @status, @class_group, @notes, @created_at, @updated_at, @last_synced_at, @pending_sync
+      @id, @full_name, @nickname, @email, @role, @status, @class_group, @notes, @auth_updated_at, @created_at, @updated_at, @last_synced_at, @pending_sync
     )
     ON CONFLICT(id) DO UPDATE SET
       full_name = excluded.full_name,
@@ -43,6 +48,7 @@ function createUsersRepo(db) {
       status = excluded.status,
       class_group = excluded.class_group,
       notes = excluded.notes,
+      auth_updated_at = excluded.auth_updated_at,
       created_at = excluded.created_at,
       updated_at = excluded.updated_at,
       last_synced_at = excluded.last_synced_at,
@@ -50,14 +56,15 @@ function createUsersRepo(db) {
   `);
   const upsertOfflineAuth = db.prepare(`
     INSERT INTO offline_auth_profiles (
-      user_id, email, salt, verifier, seeded_at, updated_at
+      user_id, email, salt, verifier, auth_updated_at, seeded_at, updated_at
     ) VALUES (
-      @user_id, @email, @salt, @verifier, @seeded_at, @updated_at
+      @user_id, @email, @salt, @verifier, @auth_updated_at, @seeded_at, @updated_at
     )
     ON CONFLICT(user_id) DO UPDATE SET
       email = excluded.email,
       salt = excluded.salt,
       verifier = excluded.verifier,
+      auth_updated_at = excluded.auth_updated_at,
       seeded_at = excluded.seeded_at,
       updated_at = excluded.updated_at
   `);
@@ -82,6 +89,7 @@ function createUsersRepo(db) {
       status: user.status === "nonaktif" ? "nonaktif" : "aktif",
       class_group: String(user.classGroup || "").trim(),
       notes: String(user.notes || "").trim(),
+      auth_updated_at: String(user.authUpdatedAt || existing?.auth_updated_at || "").trim(),
       created_at: user.createdAt || existing?.created_at || syncedAt,
       updated_at: user.updatedAt || syncedAt,
       last_synced_at: syncedAt,
@@ -134,6 +142,7 @@ function createUsersRepo(db) {
       status: payload.status === "nonaktif" ? "nonaktif" : "aktif",
       class_group: String(payload.classGroup || "").trim(),
       notes: String(payload.notes || "").trim(),
+      auth_updated_at: payload.password || payload.pin ? now : existing?.auth_updated_at || "",
       created_at: existing?.created_at || now,
       updated_at: now,
       last_synced_at: existing?.last_synced_at || null,
@@ -154,17 +163,24 @@ function createUsersRepo(db) {
       email: user.email,
       salt,
       verifier,
+      auth_updated_at: String(user.authUpdatedAt || "").trim(),
       seeded_at: now,
       updated_at: now,
     });
   }
 
-  function verifyOfflinePin(email, pin, deviceSecret) {
+  function verifyOfflinePassword(email, password, deviceSecret) {
     const row = selectOfflineAuthByEmail.get(String(email || "").trim());
     if (!row) return null;
 
-    const verifier = crypto.scryptSync(`${String(pin)}::${deviceSecret}`, row.salt, 64).toString("hex");
-    if (verifier !== row.verifier) return null;
+    const verifier = crypto.scryptSync(`${String(password)}::${deviceSecret}`, row.offline_auth_salt, 64).toString("hex");
+    if (verifier !== row.offline_auth_verifier) return null;
+
+    const cachedAuthUpdatedAt = String(row.auth_updated_at || "");
+    const verifierAuthUpdatedAt = String(row.offline_auth_updated_at || "");
+    if (cachedAuthUpdatedAt && verifierAuthUpdatedAt && cachedAuthUpdatedAt !== verifierAuthUpdatedAt) {
+      return null;
+    }
 
     return mapUserRow(row);
   }
@@ -187,7 +203,8 @@ function createUsersRepo(db) {
     saveUser,
     seedOfflineAuthProfile,
     upsertFromCloud,
-    verifyOfflinePin,
+    verifyOfflinePassword,
+    verifyOfflinePin: verifyOfflinePassword,
     normalizeEmail(value) {
       return normalizeText(value);
     },

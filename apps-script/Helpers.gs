@@ -34,6 +34,14 @@ function plusHoursIso_(hours) {
   return new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
 }
 
+function plusMinutesIso_(minutes) {
+  return new Date(Date.now() + minutes * 60 * 1000).toISOString();
+}
+
+function plusDaysIso_(days) {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 function toNumber_(value, fallback) {
   var parsed = Number(value);
   return isFinite(parsed) ? parsed : (fallback || 0);

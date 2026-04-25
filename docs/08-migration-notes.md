@@ -32,7 +32,7 @@
 ## Seed manual yang disarankan
 
 1. Jalankan `setupApplicationSpreadsheet()`
-2. Isi PIN admin dengan `setUserPinByEmail(...)`
+2. Isi password admin dengan `setUserPasswordByEmail(...)`
 3. Tambahkan user petugas aktif satu per satu
 4. Tambahkan pemasok utama
 5. Import CSV pembeli untuk membuat master `buyers` dan seed `savings`

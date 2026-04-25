@@ -394,6 +394,71 @@ body.pos-auth-page #app-main.pos-auth-card {
   margin-bottom: 0;
 }
 
+.pos-saved-login {
+  padding: 1rem;
+  border: 1px solid rgba(78, 115, 223, 0.12);
+  border-radius: 1rem;
+  background: #fbfcff;
+}
+
+.pos-saved-login-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pos-saved-login-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pos-saved-login-user {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid rgba(78, 115, 223, 0.12);
+  border-radius: 0.85rem;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  box-shadow: 0 0.45rem 1rem rgba(58, 59, 69, 0.06);
+}
+
+.pos-saved-login-user:hover,
+.pos-saved-login-user:focus {
+  border-color: rgba(78, 115, 223, 0.32);
+  outline: 0;
+  box-shadow: 0 0 0 0.16rem rgba(78, 115, 223, 0.12);
+}
+
+.pos-saved-login-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 0.78rem;
+}
+
+.pos-saved-login-remove {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.pos-password-reset {
+  padding: 1rem;
+  border: 1px solid rgba(28, 200, 138, 0.18);
+  border-radius: 1rem;
+  background: #fbfffd;
+}
+
 .pos-auth-support {
   display: flex;
   flex-direction: column;

@@ -21,12 +21,13 @@
 
 1. User login online sekali lewat GAS.
 2. Profil user non-sensitif disimpan ke `users_cache`.
-3. Verifier PIN lokal dibuat di `offline_auth_profiles`.
-4. Saat transaksi atau pemasok disimpan, data langsung masuk SQLite.
-5. Mutasi yang sama masuk ke `sync_queue`.
-6. Saat online, queue dikirim ke GAS lalu `syncPull` menarik perubahan terbaru dari Spreadsheet.
+3. Verifier password lokal dibuat di `offline_auth_profiles`.
+4. Jika user memilih simpan info login, token trusted device dari GAS disimpan terenkripsi di `saved_login_profiles`.
+5. Saat transaksi atau pemasok disimpan, data langsung masuk SQLite.
+6. Mutasi yang sama masuk ke `sync_queue`.
+7. Saat online, queue dikirim ke GAS lalu `syncPull` menarik perubahan terbaru dari Spreadsheet.
 
 ## Cakupan desktop
 
-- Aktif: login, dashboard admin/petugas, transaksi, pemasok, users, simpanan, pembayaran pemasok, laporan, dan status sync.
+- Aktif: login password, saved login perangkat 30 hari, OTP reset password, dashboard admin/petugas, transaksi, pemasok, users, simpanan, pembayaran pemasok, laporan, dan status sync.
 - Import CSV master pembeli belum dikerjakan di desktop; data pembeli dibaca dari hasil sync cloud.

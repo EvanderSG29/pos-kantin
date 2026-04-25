@@ -27,6 +27,14 @@ Header:
 - `notes`
 - `created_at`
 - `updated_at`
+- `password_hash`
+- `auth_updated_at`
+
+Catatan:
+
+- `password_hash` dipakai untuk login baru.
+- `pin_hash` tetap ada sementara untuk akun lama yang belum dimigrasikan.
+- `auth_updated_at` berubah saat password/PIN diganti agar login tersimpan di perangkat bisa dibatalkan.
 
 ## Sheet `buyers`
 
@@ -178,6 +186,34 @@ Header:
 - `user_id`
 - `expires_at`
 - `revoked_at`
+- `created_at`
+- `updated_at`
+
+## Sheet `trusted_devices`
+
+Header:
+
+- `id`
+- `user_id`
+- `token_hash`
+- `device_label`
+- `expires_at`
+- `revoked_at`
+- `last_used_at`
+- `created_at`
+- `updated_at`
+
+## Sheet `password_reset_otps`
+
+Header:
+
+- `id`
+- `user_id`
+- `email`
+- `otp_hash`
+- `expires_at`
+- `attempt_count`
+- `used_at`
 - `created_at`
 - `updated_at`
 

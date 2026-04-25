@@ -121,9 +121,10 @@ Saat app pertama kali login online:
 
 - sesi lokal dibuat di SQLite
 - user cache diperbarui
-- verifier PIN offline ditanam ke perangkat
+- verifier password offline ditanam ke perangkat
+- jika checkbox simpan info login aktif, token saved login perangkat disimpan terenkripsi selama 30 hari
 
-Sesudah itu user yang sama bisa login offline di perangkat yang sama.
+Sesudah itu user yang sama bisa login offline di perangkat yang sama. Jika saved login aktif, user juga bisa masuk dengan memilih nama user tanpa mengetik password selama profil perangkat belum kedaluwarsa.
 
 ## Troubleshooting ABI native module
 

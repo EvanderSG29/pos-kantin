@@ -30,6 +30,16 @@ function doPost(e) {
     switch (action) {
       case "login":
         return ok_("Login berhasil.", loginAction_(payload));
+      case "createTrustedDevice":
+        return ok_("Info login perangkat berhasil disimpan.", createTrustedDeviceAction_(payload, token));
+      case "loginWithTrustedDevice":
+        return ok_("Login perangkat berhasil.", loginWithTrustedDeviceAction_(payload));
+      case "revokeTrustedDevice":
+        return ok_("Info login perangkat berhasil dihapus.", revokeTrustedDeviceAction_(payload, token));
+      case "requestPasswordResetOtp":
+        return ok_("Jika email terdaftar, kode OTP akan dikirim.", requestPasswordResetOtpAction_(payload));
+      case "resetPasswordWithOtp":
+        return ok_("Password berhasil diperbarui.", resetPasswordWithOtpAction_(payload));
       case "logout":
         return ok_("Logout berhasil.", logoutAction_(token));
       case "getCurrentUser":
